@@ -388,17 +388,23 @@ func GetVideoURLForEpisodeEnhanced(episode *models.Episode, anime *models.Anime)
 		return "", fmt.Errorf("failed to get AnimeDrive stream URL: %w", err)
 	}
 
-	// Try FlixHQ for movies/TV shows
-	if isFlixHQSourcePlayer(anime) {
-		util.Debug("FlixHQ source detected", "source", anime.Source, "mediaType", anime.MediaType, "episodeURL", episode.URL)
+	// Movie/TV routing: SuperFlix and FlixHQ both flow through the enhanced API,
+	// which dispatches by anime.Source internally. Label logs by the actual
+	// source so triage isn't misled into thinking SuperFlix failures came from
+	// FlixHQ.
+	if isMovieOrTVSourcePlayer(anime) {
+		sourceLabel := anime.Source
+		if sourceLabel == "" {
+			sourceLabel = "movie/TV"
+		}
+		util.Debug("Movie/TV source detected", "source", sourceLabel, "mediaType", anime.MediaType, "episodeURL", episode.URL)
 		streamURL, err := api.GetEpisodeStreamURL(episode, anime, util.GlobalQuality)
 		if err == nil {
-			util.Debug("FlixHQ stream URL obtained", "url", streamURL)
+			util.Debug("Movie/TV stream URL obtained", "source", sourceLabel, "url", streamURL)
 			return streamURL, nil
 		}
-		util.Debug("FlixHQ stream URL failed", "error", err)
-		// For FlixHQ, return the error - legacy method won't work with DataIDs
-		return "", fmt.Errorf("failed to get FlixHQ stream URL: %w", err)
+		util.Debug("Movie/TV stream URL failed", "source", sourceLabel, "error", err)
+		return "", fmt.Errorf("failed to get %s stream URL: %w", sourceLabel, err)
 	}
 
 	// Try AllAnime enhanced navigation first if applicable
@@ -483,11 +489,15 @@ func isAnimeDriveSourcePlayer(anime *models.Anime) bool {
 }
 
 // Helper function to check if anime is from FlixHQ source (player module)
-func isFlixHQSourcePlayer(anime *models.Anime) bool {
+// isMovieOrTVSourcePlayer routes any movie/TV content through the enhanced API,
+// which dispatches by anime.Source (SuperFlix, FlixHQ, ...). Despite the legacy
+// name, this is not FlixHQ-specific — SuperFlix selections also reach this
+// branch because their MediaType is MediaTypeMovie/MediaTypeTV.
+func isMovieOrTVSourcePlayer(anime *models.Anime) bool {
 	if anime == nil {
 		return false
 	}
-	if anime.Source == "FlixHQ" {
+	if anime.Source == "FlixHQ" || anime.Source == "SuperFlix" {
 		return true
 	}
 	if anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {

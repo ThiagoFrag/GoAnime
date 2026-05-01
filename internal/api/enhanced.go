@@ -39,18 +39,48 @@ func isStdoutTerminal() bool {
 // otherwise runs the action directly. This ensures CI and non-interactive
 // environments work correctly since huh/v2 spinner may skip the Action
 // callback when no terminal is attached.
+//
+// The huh spinner's Run() can return before its Action goroutine completes
+// (e.g. tea.Interrupt from residual stdin bytes left over from a prior
+// fuzzyfinder). When that happens the closure that mutates the caller's
+// local variables is still running, so the caller would observe zero values.
+// awaitActionThroughRunner uses sync.Once + a trailing safety call to
+// guarantee the action runs exactly once and that this function does not
+// return until that single execution has finished.
 func runWithSpinner(title string, action func()) {
-	if isStdoutTerminal() {
+	if !isStdoutTerminal() {
+		action()
+		return
+	}
+	awaitActionThroughRunner(action, func(wrapped func()) {
 		_ = tui.RunClean(func() error {
 			return spinner.New().
 				Title(title).
 				Type(spinner.Dots).
-				Action(action).
+				Action(wrapped).
 				Run()
 		})
-	} else {
-		action()
-	}
+	})
+}
+
+// awaitActionThroughRunner runs `action` via `runner` and guarantees that:
+//   - action executes exactly once (sync.Once); and
+//   - this function does not return until that single execution has fully
+//     returned, even if `runner` exits before invoking the wrapped function
+//     it was given.
+//
+// Exposed at package scope so the regression test can drive it directly with
+// a mock runner that mimics the spinner's "Run() exits before Action finishes"
+// race, without depending on a real terminal.
+func awaitActionThroughRunner(action func(), runner func(wrapped func())) {
+	var once sync.Once
+	wrapped := func() { once.Do(action) }
+	runner(wrapped)
+	// If the runner already invoked wrapped and action is still in flight,
+	// once.Do here blocks until that in-flight call returns. If the runner
+	// never invoked wrapped, this call runs action now. Either way, action
+	// is guaranteed to have fully completed when we return.
+	wrapped()
 }
 
 // ErrBackToSearch is returned when user selects the back option to search again
@@ -1081,11 +1111,12 @@ func GetSuperFlixEpisodes(media *models.Anime) ([]models.Episode, error) {
 	return episodes, nil
 }
 
-// GetSuperFlixStreamURL gets the stream URL for SuperFlix content
+// GetSuperFlixStreamURL gets the stream URL for SuperFlix content.
+//
+// Subtitle clearing and global-source tagging are handled by the only caller,
+// GetEpisodeStreamURL — duplicating them here produced two identical
+// "Stored anime source: SuperFlix" debug lines per playback.
 func GetSuperFlixStreamURL(media *models.Anime, episode *models.Episode, quality string) (string, error) {
-	util.ClearGlobalSubtitles()
-	util.SetGlobalAnimeSource("SuperFlix")
-
 	sfClient := scraper.NewSuperFlixClient()
 
 	tmdbID := episode.URL

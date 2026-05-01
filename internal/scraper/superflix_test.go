@@ -164,6 +164,12 @@ func TestExtractEpisodes(t *testing.T) {
 			html:      `var ALL_EPISODES = {};`,
 			expectNil: true, // regex requires at least one char between { and }
 		},
+		{
+			name:         "filters missing, null, and future air_dates",
+			html:         fmt.Sprintf(`var ALL_EPISODES = {"1":[{"epi_num":"1","title":"Valid","air_date":"2020-01-15"},{"epi_num":"2","title":"Missing","air_date":""},{"epi_num":"3","title":"Null","air_date":"null"},{"epi_num":"4","title":"Future","air_date":"%s"}]};`, time.Now().Add(48*time.Hour).Format("2006-01-02")),
+			expectKeys:   []string{"1"},
+			expectCounts: map[string]int{"1": 1},
+		},
 	}
 
 	client := NewSuperFlixClient()
@@ -2095,4 +2101,47 @@ func TestEnsureJSONResponse_BlankBodyWithBadStatus_2026_04_30(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "500")
+}
+
+// Regression test (added 2026-05-01)
+//
+// Naruto S2E5 on SuperFlix is a placeholder episode (`air_date: null`,
+// title "Episódio 5"); /player/bootstrap returns `{"data":{"options":[]}}`
+// for it. Before this fix the user saw a generic "no servers available"
+// error that looked like a system bug. Pin three things:
+//  1. ErrSuperFlixNoServers wraps the empty-options condition
+//  2. The error message includes the player URL and contentid for triage
+//  3. Real responses with servers still succeed (no false positives)
+func TestGetStreamURL_EmptyBootstrapOptionsReturnsTypedError_2026_05_01(t *testing.T) {
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/serie/46260/2/5", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<html><head><title>Player</title></head><body>
+			<script>
+			var CSRF_TOKEN = "csrf123";
+			var PAGE_TOKEN = "pt456";
+			var INITIAL_CONTENT_ID = 999914;
+			var CONTENT_TYPE = "serie";
+			</script>
+		</body></html>`)
+	})
+	mux.HandleFunc("/player/bootstrap", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"data":{"options":[],"flags":{"mp4_active":false}}}`)
+	})
+
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	client := newTestSuperFlixClient(srv.URL)
+	_, err := client.GetStreamURL(context.Background(), "serie", "46260", "2", "5")
+
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrSuperFlixNoServers,
+		"empty bootstrap options must produce ErrSuperFlixNoServers so callers can distinguish content-unavailability from system errors")
+	msg := err.Error()
+	assert.Contains(t, msg, "/serie/46260/2/5", "error must include the player path for triage")
+	assert.Contains(t, msg, "contentid=999914", "error must include the contentid that returned no servers")
 }

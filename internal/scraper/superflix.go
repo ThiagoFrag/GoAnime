@@ -4,6 +4,7 @@ package scraper
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,6 +19,13 @@ import (
 	"github.com/alvarorichard/Goanime/internal/models"
 	"github.com/alvarorichard/Goanime/internal/util"
 )
+
+// ErrSuperFlixNoServers is returned when /player/bootstrap responds with an
+// empty options list. This is a content-availability signal from SuperFlix
+// (the upstream JS shows a "not yet released" screen in the same case), not
+// a system or scraping error — callers should surface it to the user as
+// "this episode has no source on SuperFlix" rather than retrying.
+var ErrSuperFlixNoServers = errors.New("superflix: no servers available for this content")
 
 const (
 	// SuperFlixBase is the canonical SuperFlix host. The legacy
@@ -398,6 +406,25 @@ func (c *SuperFlixClient) ExtractEpisodes(html string) (map[string][]SuperFlixEp
 	if err := json.Unmarshal([]byte(m[1]), &result); err != nil {
 		return nil, fmt.Errorf("failed to parse ALL_EPISODES: %w", err)
 	}
+
+	now := time.Now().UTC()
+	for season, episodes := range result {
+		var validEpisodes []SuperFlixEpisode
+		for _, ep := range episodes {
+			if ep.AirDate == "" || ep.AirDate == "null" {
+				continue
+			}
+			if t, err := time.Parse("2006-01-02", ep.AirDate); err == nil {
+				// Keep episodes airing today or earlier
+				if t.After(now.Add(24 * time.Hour)) {
+					continue
+				}
+			}
+			validEpisodes = append(validEpisodes, ep)
+		}
+		result[season] = validEpisodes
+	}
+
 	return result, nil
 }
 
@@ -674,7 +701,21 @@ func (c *SuperFlixClient) GetStreamURL(ctx context.Context, mediaType, mediaID, 
 		return nil, fmt.Errorf("failed to bootstrap: %w", err)
 	}
 	if len(servers) == 0 {
-		return nil, fmt.Errorf("no servers available")
+		// Empty bootstrap on a fully-loaded player page means SuperFlix has
+		// no provider for this specific content (typically placeholder
+		// episodes whose `air_date` is null in ALL_EPISODES). The upstream
+		// site renders a "not yet released" screen in the same case.
+		// Annotate the error with the player URL and contentid so triage
+		// doesn't confuse this with a network or scraping failure.
+		playerPath := fmt.Sprintf("/%s/%s", mediaType, mediaID)
+		if season != "" {
+			playerPath += "/" + season
+		}
+		if episode != "" {
+			playerPath += "/" + episode
+		}
+		return nil, fmt.Errorf("%w (url=%s%s, contentid=%s) — try another episode or source",
+			ErrSuperFlixNoServers, c.baseURL, playerPath, tokens.ContentID)
 	}
 
 	// Pick first non-fallback server

@@ -270,6 +270,39 @@ func TestIntegration_SuperFlix_SeriesEpisodes(t *testing.T) {
 }
 
 // =============================================================================
+// Integration Test: Series episodes filtering missing/future dates
+// =============================================================================
+
+func TestIntegration_SuperFlix_SeriesEpisodes_FiltersPlaceholders(t *testing.T) {
+	t.Parallel()
+
+	futureDate := time.Now().Add(48 * time.Hour).Format("2006-01-02")
+	episodesHTML := fmt.Sprintf(`<html><script>
+		var ALL_EPISODES = {"1": [{"epi_num":"1","title":"Valid Episode","air_date":"2020-01-15"},{"epi_num":"2","title":"Missing AirDate","air_date":""},{"epi_num":"3","title":"Null AirDate","air_date":"null"},{"epi_num":"4","title":"Future Episode","air_date":"%s"}]};
+		var CSRF_TOKEN = "csrf";
+		var PAGE_TOKEN = "page";
+		var INITIAL_CONTENT_ID = 5555;
+		var CONTENT_TYPE = "serie";
+	</script></html>`, futureDate)
+
+	srv := buildSuperFlixTestServer(t, testServerOpts{
+		playerPageHTML: episodesHTML,
+	})
+	defer srv.Close()
+
+	client := scraper.NewSuperFlixClient()
+	setTestClientURL(client, srv.URL)
+
+	episodes, err := client.GetEpisodes(context.Background(), "5555")
+	require.NoError(t, err)
+	require.NotNil(t, episodes)
+
+	// Verify only the valid episode is kept
+	require.Len(t, episodes["1"], 1, "Should filter out episodes with missing, null, or future air_dates")
+	assert.Equal(t, "Valid Episode", episodes["1"][0].Title)
+}
+
+// =============================================================================
 // Integration Test: Search result image pipeline
 // =============================================================================
 
@@ -740,6 +773,35 @@ func TestIntegration_RealSuperFlix_GetEpisodes(t *testing.T) {
 	for seasonNum, eps := range episodes {
 		for _, ep := range eps {
 			assert.NotEmpty(t, ep.EpiNum, "episode number must not be empty in season %s", seasonNum)
+			assert.NotEmpty(t, ep.AirDate, "air_date must not be empty after filtering")
+			assert.NotEqual(t, "null", ep.AirDate, "air_date must not be 'null'")
+		}
+	}
+}
+
+func TestIntegration_RealSuperFlix_GetEpisodes_NarutoPlaceholderFilter(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test that hits real SuperFlix API")
+	}
+
+	client := scraper.NewSuperFlixClient()
+
+	// TMDB ID 46260 is Naruto (Shippuden has a different ID, but user mentioned TMDB ID 46260 in log)
+	episodes, err := client.GetEpisodes(context.Background(), "46260")
+	if err != nil {
+		t.Skipf("SuperFlix API unavailable: %v", err)
+	}
+
+	if episodes == nil {
+		t.Skip("No episodes returned (API may have changed)")
+	}
+
+	// Verify episode structure - any episode that passed the filter MUST have a valid air_date
+	for seasonNum, eps := range episodes {
+		for _, ep := range eps {
+			assert.NotEmpty(t, ep.EpiNum, "episode number must not be empty in season %s", seasonNum)
+			assert.NotEmpty(t, ep.AirDate, "air_date must not be empty after filtering")
+			assert.NotEqual(t, "null", ep.AirDate, "air_date must not be 'null'")
 		}
 	}
 }
