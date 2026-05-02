@@ -2103,6 +2103,63 @@ func TestEnsureJSONResponse_BlankBodyWithBadStatus_2026_04_30(t *testing.T) {
 	assert.Contains(t, err.Error(), "500")
 }
 
+// Regression test (added 2026-05-02)
+//
+// Episode air_date filter must not depend on the time-of-day in `now`. A
+// previous version used `t.After(now.Add(24*time.Hour))`, which let
+// tomorrow's episodes leak through whenever `now`'s UTC time-of-day was
+// past 00:00 — i.e. for any caller in a timezone west of UTC, every
+// evening reproduced a 1-day-of-leak window. Pin two boundary cases on
+// a fixed clock so neither timezone nor wall-clock drift can hide a
+// regression:
+//   1. now=2026-05-02 03:30 UTC, ep.air_date=2026-05-03 → must be filtered
+//   2. now=2026-05-02 03:30 UTC, ep.air_date=2026-05-02 → must be kept
+func TestFilterEpisodesByAirDate_TomorrowIsNotKept_2026_05_02(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 5, 2, 3, 30, 0, 0, time.UTC)
+	episodes := map[string][]SuperFlixEpisode{
+		"1": {
+			{EpiNum: json.Number("1"), Title: "Today", AirDate: "2026-05-02"},
+			{EpiNum: json.Number("2"), Title: "Tomorrow", AirDate: "2026-05-03"},
+			{EpiNum: json.Number("3"), Title: "WayPast", AirDate: "2020-01-15"},
+			{EpiNum: json.Number("4"), Title: "Empty", AirDate: ""},
+			{EpiNum: json.Number("5"), Title: "Null", AirDate: "null"},
+		},
+	}
+
+	got := filterEpisodesByAirDate(episodes, now)
+	require.Len(t, got["1"], 2, "should keep only Today and WayPast")
+
+	titles := []string{got["1"][0].Title, got["1"][1].Title}
+	assert.Contains(t, titles, "Today")
+	assert.Contains(t, titles, "WayPast")
+	assert.NotContains(t, titles, "Tomorrow", "future air_date must be filtered regardless of UTC time-of-day")
+}
+
+// Regression test (added 2026-05-02)
+//
+// Same boundary as above, but exercised through a non-UTC `now` to prove
+// the filter normalizes to UTC internally. BRT (UTC-3) at 23:30 local on
+// 2026-05-01 == 02:30 UTC on 2026-05-02, so episodes with air_date
+// 2026-05-03 are still tomorrow-in-UTC and must be filtered.
+func TestFilterEpisodesByAirDate_NonUTCNow_2026_05_02(t *testing.T) {
+	t.Parallel()
+
+	brt := time.FixedZone("BRT", -3*60*60)
+	now := time.Date(2026, 5, 1, 23, 30, 0, 0, brt) // == 2026-05-02 02:30 UTC
+	episodes := map[string][]SuperFlixEpisode{
+		"1": {
+			{EpiNum: json.Number("1"), Title: "TodayUTC", AirDate: "2026-05-02"},
+			{EpiNum: json.Number("2"), Title: "TomorrowUTC", AirDate: "2026-05-03"},
+		},
+	}
+
+	got := filterEpisodesByAirDate(episodes, now)
+	require.Len(t, got["1"], 1)
+	assert.Equal(t, "TodayUTC", got["1"][0].Title)
+}
+
 // Regression test (added 2026-05-01)
 //
 // Naruto S2E5 on SuperFlix is a placeholder episode (`air_date: null`,

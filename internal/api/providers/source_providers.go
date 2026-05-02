@@ -136,15 +136,18 @@ func (p *goyabuProvider) FetchStreamURL(_ context.Context, episode *models.Episo
 }
 
 // --- FlixHQ Provider ---
-
-type flixHQProvider struct {
-	sm *scraper.ScraperManager
-}
-
+//
+// TEMP-DISABLED: entire FlixHQ provider commented out until a fix lands.
+// Restore the init() and the type+methods together.
+/*
 func init() {
 	RegisterProvider(source.FlixHQ, func(sm *scraper.ScraperManager) Provider {
 		return &flixHQProvider{sm: sm}
 	})
+}
+
+type flixHQProvider struct {
+	sm *scraper.ScraperManager
 }
 
 func (p *flixHQProvider) Kind() source.SourceKind { return source.FlixHQ }
@@ -172,17 +175,21 @@ func (p *flixHQProvider) FetchStreamURL(_ context.Context, episode *models.Episo
 	}
 	return url, nil
 }
+*/
 
 // --- SFlix Provider ---
-
-type sflixProvider struct {
-	sm *scraper.ScraperManager
-}
-
+//
+// TEMP-DISABLED: entire SFlix provider commented out until a fix lands.
+// Restore the init() and the type+methods together.
+/*
 func init() {
 	RegisterProvider(source.SFlix, func(sm *scraper.ScraperManager) Provider {
 		return &sflixProvider{sm: sm}
 	})
+}
+
+type sflixProvider struct {
+	sm *scraper.ScraperManager
 }
 
 func (p *sflixProvider) Kind() source.SourceKind { return source.SFlix }
@@ -210,17 +217,21 @@ func (p *sflixProvider) FetchStreamURL(_ context.Context, episode *models.Episod
 	}
 	return url, nil
 }
+*/
 
 // --- NineAnime Provider ---
-
-type nineAnimeProvider struct {
-	sm *scraper.ScraperManager
-}
-
+//
+// TEMP-DISABLED: entire NineAnime provider commented out until a fix lands.
+// Restore the init() and the type+methods together.
+/*
 func init() {
 	RegisterProvider(source.NineAnime, func(sm *scraper.ScraperManager) Provider {
 		return &nineAnimeProvider{sm: sm}
 	})
+}
+
+type nineAnimeProvider struct {
+	sm *scraper.ScraperManager
 }
 
 func (p *nineAnimeProvider) Kind() source.SourceKind { return source.NineAnime }
@@ -245,6 +256,7 @@ func (p *nineAnimeProvider) FetchStreamURL(_ context.Context, episode *models.Ep
 	}
 	return url, nil
 }
+*/
 
 // --- SuperFlix Provider ---
 

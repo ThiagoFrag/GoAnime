@@ -47,25 +47,26 @@ var sourceDefs = []SourceDefinition{
 		Tags:        []string{"[superflix]"},
 		URLMatchers: []string{"superflix"},
 	},
-	{
-		Kind:        FlixHQ,
-		Explicit:    []string{"FlixHQ"},
-		Tags:        []string{"[flixhq]", "[movie]", "[tv]"},
-		URLMatchers: []string{"flixhq"},
-		MediaTypes:  []models.MediaType{models.MediaTypeMovie, models.MediaTypeTV},
-	},
-	{
-		Kind:        SFlix,
-		Explicit:    []string{"SFlix"},
-		Tags:        []string{"[sflix]"},
-		URLMatchers: []string{"sflix"},
-	},
-	{
-		Kind:        NineAnime,
-		Explicit:    []string{"9Anime"},
-		Tags:        []string{"[9anime]", "[multilanguage]"},
-		URLMatchers: []string{"9anime"},
-	},
+	// TEMP-DISABLED: FlixHQ, SFlix, and 9Anime source defs commented out until a fix lands.
+	// {
+	// 	Kind:        FlixHQ,
+	// 	Explicit:    []string{"FlixHQ"},
+	// 	Tags:        []string{"[flixhq]", "[movie]", "[tv]"},
+	// 	URLMatchers: []string{"flixhq"},
+	// 	MediaTypes:  []models.MediaType{models.MediaTypeMovie, models.MediaTypeTV},
+	// },
+	// {
+	// 	Kind:        SFlix,
+	// 	Explicit:    []string{"SFlix"},
+	// 	Tags:        []string{"[sflix]"},
+	// 	URLMatchers: []string{"sflix"},
+	// },
+	// {
+	// 	Kind:        NineAnime,
+	// 	Explicit:    []string{"9Anime"},
+	// 	Tags:        []string{"[9anime]", "[multilanguage]"},
+	// 	URLMatchers: []string{"9anime"},
+	// },
 	{
 		Kind:        AllAnime,
 		Explicit:    []string{"AllAnime"},

@@ -407,7 +407,19 @@ func (c *SuperFlixClient) ExtractEpisodes(html string) (map[string][]SuperFlixEp
 		return nil, fmt.Errorf("failed to parse ALL_EPISODES: %w", err)
 	}
 
-	now := time.Now().UTC()
+	return filterEpisodesByAirDate(result, time.Now()), nil
+}
+
+// filterEpisodesByAirDate drops episodes with empty/"null" air_date and
+// episodes whose air_date is strictly after the current UTC day.
+//
+// Comparison is done at day granularity in UTC so the result does not drift
+// across midnight: a previous version used `t.After(now.Add(24*time.Hour))`,
+// which kept tomorrow's episodes any time `now`'s UTC time-of-day was past
+// 00:00 — flaky for any caller running with `now` in a timezone west of UTC.
+func filterEpisodesByAirDate(result map[string][]SuperFlixEpisode, now time.Time) map[string][]SuperFlixEpisode {
+	utcNow := now.UTC()
+	today := time.Date(utcNow.Year(), utcNow.Month(), utcNow.Day(), 0, 0, 0, 0, time.UTC)
 	for season, episodes := range result {
 		var validEpisodes []SuperFlixEpisode
 		for _, ep := range episodes {
@@ -415,8 +427,7 @@ func (c *SuperFlixClient) ExtractEpisodes(html string) (map[string][]SuperFlixEp
 				continue
 			}
 			if t, err := time.Parse("2006-01-02", ep.AirDate); err == nil {
-				// Keep episodes airing today or earlier
-				if t.After(now.Add(24 * time.Hour)) {
+				if t.After(today) {
 					continue
 				}
 			}
@@ -424,8 +435,7 @@ func (c *SuperFlixClient) ExtractEpisodes(html string) (map[string][]SuperFlixEp
 		}
 		result[season] = validEpisodes
 	}
-
-	return result, nil
+	return result
 }
 
 // Bootstrap calls /player/bootstrap to get server list

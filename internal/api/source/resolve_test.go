@@ -6,6 +6,17 @@ import (
 	"github.com/alvarorichard/Goanime/internal/models"
 )
 
+// skipIfTempDisabled skips a sub-test whose expected kind is one of the
+// providers temporarily disabled in definition.go. Restore the call sites
+// (or remove this helper) when those sourceDefs entries are re-enabled.
+func skipIfTempDisabled(t *testing.T, kind SourceKind) {
+	t.Helper()
+	switch kind {
+	case FlixHQ, SFlix, NineAnime:
+		t.Skipf("TEMP-DISABLED: %s source is commented out in sourceDefs", kind)
+	}
+}
+
 func TestResolve_ExplicitSource(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -24,6 +35,7 @@ func TestResolve_ExplicitSource(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			skipIfTempDisabled(t, tt.wantKind)
 			anime := &models.Anime{Source: tt.source}
 			got := Resolve(anime)
 			if got.Kind != tt.wantKind {
@@ -34,6 +46,7 @@ func TestResolve_ExplicitSource(t *testing.T) {
 }
 
 func TestResolve_ExplicitSourceTrumpsURL(t *testing.T) {
+	skipIfTempDisabled(t, NineAnime)
 	anime := &models.Anime{
 		Source: "9Anime",
 		URL:    "https://animefire.plus/something",
@@ -55,6 +68,7 @@ func TestResolve_MediaType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			skipIfTempDisabled(t, tt.wantKind)
 			anime := &models.Anime{MediaType: tt.mediaType}
 			got := Resolve(anime)
 			if got.Kind != tt.wantKind {
@@ -84,6 +98,7 @@ func TestResolve_NameTags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			skipIfTempDisabled(t, tt.wantKind)
 			anime := &models.Anime{Name: tt.animName}
 			got := Resolve(anime)
 			if got.Kind != tt.wantKind {
@@ -110,6 +125,7 @@ func TestResolve_URLPatterns(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			skipIfTempDisabled(t, tt.wantKind)
 			anime := &models.Anime{URL: tt.url}
 			got := Resolve(anime)
 			if got.Kind != tt.wantKind {

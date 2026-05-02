@@ -5,12 +5,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/alvarorichard/Goanime/internal/models"
 	"github.com/alvarorichard/Goanime/internal/util"
 )
+
+// TEMP-DISABLED: "sync" import was removed when SearchAllMovieSources was disabled.
+// Restore "sync" when re-enabling the FlixHQ/SFlix concurrent search body.
 
 // MediaManager provides a unified interface for all media types
 type MediaManager struct {
@@ -113,99 +115,109 @@ func (mm *MediaManager) SearchSFlixMoviesAndTV(query string) ([]*SFlixMedia, err
 	return mm.sflixClient.SearchMedia(query)
 }
 
-// movieSearchResult holds result from a source
+// TEMP-DISABLED: movieSearchResult only used by SearchAllMovieSources body.
+// Restore alongside the SearchAllMovieSources concurrent search body.
+/*
 type movieSearchResult struct {
 	source string
 	flixhq []*FlixHQMedia
 	sflix  []*SFlixMedia
 	err    error
 }
+*/
 
 // SearchAllMovieSources searches both FlixHQ and SFlix concurrently with timeout
 // Returns as soon as we have results, doesn't wait for slow sources
+//
+// TEMP-DISABLED: FlixHQ and SFlix movie/TV sources are temporarily disabled until a fix lands.
+// The original concurrent search body is preserved below in a commented block.
 func (mm *MediaManager) SearchAllMovieSources(query string) ([]*FlixHQMedia, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), movieSearchTimeout)
-	defer cancel()
+	return nil, fmt.Errorf("no results found for query: %s", query)
 
-	resultChan := make(chan movieSearchResult, 2)
+	/*
+			ctx, cancel := context.WithTimeout(context.Background(), movieSearchTimeout)
+			defer cancel()
 
-	// Launch FlixHQ search
-	go func() {
-		results, err := mm.flixhqClient.SearchMedia(query)
-		resultChan <- movieSearchResult{source: "FlixHQ", flixhq: results, err: err}
-	}()
+			resultChan := make(chan movieSearchResult, 2)
 
-	// Launch SFlix search
-	go func() {
-		results, err := mm.sflixClient.SearchMedia(query)
-		resultChan <- movieSearchResult{source: "SFlix", sflix: results, err: err}
-	}()
+			// Launch FlixHQ search
+			go func() {
+				results, err := mm.flixhqClient.SearchMedia(query)
+				resultChan <- movieSearchResult{source: "FlixHQ", flixhq: results, err: err}
+			}()
 
-	var (
-		combined      []*FlixHQMedia
-		mutex         sync.Mutex
-		receivedCount int
-		hasResults    bool
-		earlyTimer    <-chan time.Time
-		errors        []string
-	)
+			// Launch SFlix search
+			go func() {
+				results, err := mm.sflixClient.SearchMedia(query)
+				resultChan <- movieSearchResult{source: "SFlix", sflix: results, err: err}
+			}()
 
-	for {
-		select {
-		case res := <-resultChan:
-			receivedCount++
+			var (
+				combined      []*FlixHQMedia
+				mutex         sync.Mutex
+				receivedCount int
+				hasResults    bool
+				earlyTimer    <-chan time.Time
+				errors        []string
+			)
 
-			if res.err != nil {
-				errors = append(errors, fmt.Sprintf("%s: %v", res.source, res.err))
-			} else {
-				mutex.Lock()
-				if res.source == "FlixHQ" && len(res.flixhq) > 0 {
-					for _, r := range res.flixhq {
-						r.Source = "FlixHQ"
-						combined = append(combined, r)
+			for {
+				select {
+				case res := <-resultChan:
+					receivedCount++
+
+					if res.err != nil {
+						errors = append(errors, fmt.Sprintf("%s: %v", res.source, res.err))
+					} else {
+						mutex.Lock()
+						if res.source == "FlixHQ" && len(res.flixhq) > 0 {
+							for _, r := range res.flixhq {
+								r.Source = "FlixHQ"
+								combined = append(combined, r)
+							}
+							hasResults = true
+						} else if res.source == "SFlix" && len(res.sflix) > 0 {
+							for _, r := range res.sflix {
+								converted := mm.ConvertSFlixToFlixHQ(r)
+								combined = append(combined, converted)
+							}
+							hasResults = true
+						}
+						mutex.Unlock()
+
+						// Start early return timer on first results
+						if hasResults && earlyTimer == nil {
+							earlyTimer = time.After(earlyReturnWait)
+						}
 					}
-					hasResults = true
-				} else if res.source == "SFlix" && len(res.sflix) > 0 {
-					for _, r := range res.sflix {
-						converted := mm.ConvertSFlixToFlixHQ(r)
-						combined = append(combined, converted)
+
+					// All sources responded
+					if receivedCount >= 2 {
+						goto done
 					}
-					hasResults = true
+
+				case <-earlyTimer:
+					// Got results, waited enough, return early
+					if hasResults {
+						goto done
+					}
+
+				case <-ctx.Done():
+					// Timeout - return what we have
+					goto done
 				}
-				mutex.Unlock()
+			}
 
-				// Start early return timer on first results
-				if hasResults && earlyTimer == nil {
-					earlyTimer = time.After(earlyReturnWait)
+		done:
+			if len(combined) == 0 {
+				if len(errors) > 0 {
+					return nil, fmt.Errorf("no results found: %s", strings.Join(errors, "; "))
 				}
+				return nil, fmt.Errorf("no results found for query: %s", query)
 			}
 
-			// All sources responded
-			if receivedCount >= 2 {
-				goto done
-			}
-
-		case <-earlyTimer:
-			// Got results, waited enough, return early
-			if hasResults {
-				goto done
-			}
-
-		case <-ctx.Done():
-			// Timeout - return what we have
-			goto done
-		}
-	}
-
-done:
-	if len(combined) == 0 {
-		if len(errors) > 0 {
-			return nil, fmt.Errorf("no results found: %s", strings.Join(errors, "; "))
-		}
-		return nil, fmt.Errorf("no results found for query: %s", query)
-	}
-
-	return combined, nil
+			return combined, nil
+	*/
 }
 
 // ConvertSFlixToFlixHQ converts SFlixMedia to FlixHQMedia format for unified handling

@@ -151,6 +151,8 @@ func TestFlixHQClient_ExtractLanguageFromLabel(t *testing.T) {
 }
 
 func TestMediaManager_Creation(t *testing.T) {
+	t.Skip("TEMP-DISABLED: FlixHQ adapter is not registered in NewScraperManager while the source is disabled")
+
 	mm := NewMediaManager()
 
 	if mm.scraperManager == nil {

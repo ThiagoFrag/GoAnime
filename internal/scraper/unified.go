@@ -77,15 +77,14 @@ func NewScraperManager() *ScraperManager {
 		// Initialize scrapers
 		manager.scrapers[AllAnimeType] = &AllAnimeAdapter{client: NewAllAnimeClient()}
 		manager.scrapers[AnimefireType] = &AnimefireAdapter{client: NewAnimefireClient()}
-		manager.scrapers[FlixHQType] = &FlixHQAdapter{client: NewFlixHQClient()}
-		manager.scrapers[SFlixType] = &SFlixAdapter{client: NewSFlixClient()}
-		manager.scrapers[NineAnimeType] = &NineAnimeAdapter{client: NewNineAnimeClient()}
+		// TEMP-DISABLED: FlixHQ, SFlix, and 9Anime adapters disabled until a fix lands.
+		// manager.scrapers[FlixHQType] = &FlixHQAdapter{client: NewFlixHQClient()}
+		// manager.scrapers[SFlixType] = &SFlixAdapter{client: NewSFlixClient()}
+		// manager.scrapers[NineAnimeType] = &NineAnimeAdapter{client: NewNineAnimeClient()}
 		manager.scrapers[GoyabuType] = &GoyabuAdapter{client: NewGoyabuClient()}
 		manager.scrapers[SuperFlixType] = &SuperFlixAdapter{client: NewSuperFlixClient()}
 
-		// AnimeDrive disabled — Cloudflare protection blocks all requests.
-		// Kept on standby until a bypass/solution is found.
-		// manager.scrapers[AnimeDriveType] = &AnimeDriveAdapter{client: NewAnimeDriveClient()}
+		manager.scrapers[AnimeDriveType] = &AnimeDriveAdapter{client: NewAnimeDriveClient()}
 
 		globalScraperManager = manager
 	})
