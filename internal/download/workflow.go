@@ -212,7 +212,7 @@ func HandleDownloadRequest(request *util.DownloadRequest) error {
 // Example usage functions for documentation
 
 // ExampleSingleDownload demonstrates single episode download
-//func ExampleSingleDownload() {
+// func ExampleSingleDownload() {
 //	// Command: goanime -d "My Hero Academia" 15
 //	// This would create a DownloadRequest like:
 //	request := &util.DownloadRequest{
@@ -224,10 +224,10 @@ func HandleDownloadRequest(request *util.DownloadRequest) error {
 //	if err := HandleDownloadRequest(request); err != nil {
 //		log.Printf("Download failed: %v", err)
 //	}
-//}
+// }
 
-//// ExampleRangeDownload demonstrates episode range download
-//func ExampleRangeDownload() {
+// ExampleRangeDownload demonstrates episode range download
+// func ExampleRangeDownload() {
 //	// Command: goanime -d -r "Attack on Titan" 1-5
 //	// This would create a DownloadRequest like:
 //	request := &util.DownloadRequest{

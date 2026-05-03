@@ -126,7 +126,8 @@ func FetchAnimeDetails(anime *models.Anime) {
 				needsAniList := anime.AnilistID <= 0 || anime.MalID <= 0 || anime.ImageURL == ""
 				needsSourceDetails := anime.Source == "AllAnime" && len(anime.URL) > 20 && strings.Contains(anime.URL, "allanime.to")
 
-				if needsAniList && needsSourceDetails {
+				switch {
+				case needsAniList && needsSourceDetails:
 					// Both needed — run in parallel
 					var wg sync.WaitGroup
 					wg.Add(2)
@@ -155,7 +156,7 @@ func FetchAnimeDetails(anime *models.Anime) {
 					}()
 
 					wg.Wait()
-				} else if needsAniList {
+				case needsAniList:
 					aniListInfo, err := api.FetchAnimeFromAniList(anime.Name)
 					if err != nil {
 						util.Debugf("Failed to fetch from AniList: %v", err)
@@ -168,7 +169,7 @@ func FetchAnimeDetails(anime *models.Anime) {
 						}
 						util.Debugf("Anime enriched with AniList data - ID: %d, MAL: %d", anime.AnilistID, anime.MalID)
 					}
-				} else {
+				default:
 					util.Debugf("AniList data already present (ID: %d, MAL: %d), skipping redundant fetch", anime.AnilistID, anime.MalID)
 					if needsSourceDetails {
 						if err := api.FetchAnimeDetails(anime); err != nil {

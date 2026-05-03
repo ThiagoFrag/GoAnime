@@ -1344,11 +1344,12 @@ func selectAudioTrack(socketPath string) {
 		}
 
 		// Build the label
-		if title != "" {
+		switch {
+		case title != "":
 			parts = append(parts, title)
-		} else if lang != "" {
+		case lang != "":
 			parts = append(parts, lang)
-		} else {
+		default:
 			parts = append(parts, fmt.Sprintf("Audio %d", id))
 		}
 
@@ -1422,11 +1423,12 @@ func selectSubtitleTrack(socketPath string) {
 		}
 
 		// Build the label
-		if title != "" {
+		switch {
+		case title != "":
 			parts = append(parts, title)
-		} else if lang != "" {
+		case lang != "":
 			parts = append(parts, lang)
-		} else {
+		default:
 			parts = append(parts, fmt.Sprintf("Subtitle %d", id))
 		}
 

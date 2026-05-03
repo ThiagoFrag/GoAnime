@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"os/signal"
@@ -77,7 +76,7 @@ func main() {
 		// Check if error is update request
 		if err == util.ErrUpdateRequested {
 			if updateErr := handlers.HandleUpdateRequest(); updateErr != nil {
-				log.Fatalln(util.ErrorHandler(updateErr))
+				util.Errorf("%v", util.ErrorHandler(updateErr))
 			}
 			return
 
@@ -85,21 +84,21 @@ func main() {
 		// Check if error is download request
 		if err == util.ErrDownloadRequested {
 			if downloadErr := handlers.HandleDownloadRequest(); downloadErr != nil {
-				log.Fatalln(util.ErrorHandler(downloadErr))
+				util.Errorf("%v", util.ErrorHandler(downloadErr))
 			}
 			return
 		}
 		// Check if error is movie download request (FlixHQ/SFlix)
 		if err == util.ErrMovieDownloadRequested {
 			if movieDownloadErr := handlers.HandleMovieDownloadRequest(); movieDownloadErr != nil {
-				log.Fatalln(util.ErrorHandler(movieDownloadErr))
+				util.Errorf("%v", util.ErrorHandler(movieDownloadErr))
 			}
 			return
 		}
 		// Check if error is upscale request
 		if err == util.ErrUpscaleRequested {
 			if upscaleErr := handlers.HandleUpscaleRequest(); upscaleErr != nil {
-				log.Fatalln(util.ErrorHandler(upscaleErr))
+				util.Errorf("%v", util.ErrorHandler(upscaleErr))
 			}
 			return
 		}
@@ -107,7 +106,8 @@ func main() {
 		if err == util.ErrHelpRequested {
 			return
 		}
-		log.Fatalln(util.ErrorHandler(err))
+		util.Errorf("%v", util.ErrorHandler(err))
+		return
 	}
 
 	// Handle normal playback mode

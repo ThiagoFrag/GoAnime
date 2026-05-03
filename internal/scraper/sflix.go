@@ -447,13 +447,14 @@ func (c *SFlixClient) GetInfoWithContext(ctx context.Context, id string) (*SFlix
 	var mediaType MediaType
 	var infoURL string
 
-	if strings.HasPrefix(id, "movie/") {
+	switch {
+	case strings.HasPrefix(id, "movie/"):
 		mediaType = MediaTypeMovie
 		infoURL = fmt.Sprintf("%s/%s", c.baseURL, id)
-	} else if strings.HasPrefix(id, "tv/") {
+	case strings.HasPrefix(id, "tv/"):
 		mediaType = MediaTypeTV
 		infoURL = fmt.Sprintf("%s/%s", c.baseURL, id)
-	} else {
+	default:
 		// Try to fetch and detect type
 		infoURL = fmt.Sprintf("%s/movie/%s", c.baseURL, id)
 		mediaType = MediaTypeMovie
@@ -1696,7 +1697,8 @@ func (c *SFlixClient) parseMediaItem(s *goquery.Selection) *SFlixMedia {
 
 	// Extract full path ID (e.g., "movie/free-inception-hd-19764" or "tv/free-stranger-things-hd-39444")
 	parts := strings.Split(strings.TrimPrefix(href, "/"), "/")
-	if len(parts) >= 2 {
+	switch {
+	case len(parts) >= 2:
 		switch parts[0] {
 		case "tv", "tv-show":
 			mediaType = MediaTypeTV
@@ -1707,11 +1709,11 @@ func (c *SFlixClient) parseMediaItem(s *goquery.Selection) *SFlixMedia {
 			mediaType = c.detectMediaType(s, href)
 		}
 		mediaID = parts[0] + "/" + parts[1]
-	} else if len(parts) == 1 {
+	case len(parts) == 1:
 		mediaID = parts[0]
 		// Try to detect type from other indicators
 		mediaType = c.detectMediaType(s, href)
-	} else {
+	default:
 		return nil
 	}
 

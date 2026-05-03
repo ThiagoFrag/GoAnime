@@ -168,7 +168,9 @@ func TestDecodeToBeParsedCTR_TrailingBytesIgnored(t *testing.T) {
 	block, err := aes.NewCipher(key[:])
 	require.NoError(t, err)
 
-	iv := append(nonce, 0x00, 0x00, 0x00, 0x02)
+	iv := make([]byte, 0, len(nonce)+4)
+	iv = append(iv, nonce...)
+	iv = append(iv, 0x00, 0x00, 0x00, 0x02)
 	stream := cipher.NewCTR(block, iv)
 	ct := make([]byte, len(plaintext))
 	stream.XORKeyStream(ct, []byte(plaintext))
@@ -337,18 +339,24 @@ func buildFilemoonResponse(t *testing.T, plaintext string) string {
 	kp2 := make([]byte, 16)
 	_, _ = io.ReadFull(rand.Reader, kp1)
 	_, _ = io.ReadFull(rand.Reader, kp2)
-	key := append(kp1, kp2...) // 32-byte AES-256 key
+	key := make([]byte, 0, len(kp1)+len(kp2))
+	key = append(key, kp1...)
+	key = append(key, kp2...) // 32-byte AES-256 key
 
 	block, err := aes.NewCipher(key)
 	require.NoError(t, err)
 
-	ctr := append(iv, 0x00, 0x00, 0x00, 0x02)
+	ctr := make([]byte, 0, len(iv)+4)
+	ctr = append(ctr, iv...)
+	ctr = append(ctr, 0x00, 0x00, 0x00, 0x02)
 	stream := cipher.NewCTR(block, ctr)
 	ct := make([]byte, len(plaintext))
 	stream.XORKeyStream(ct, []byte(plaintext))
 
 	// 16 trailing bytes — discarded by the decoder, just like decodeToBeParsed.
-	payload := append(ct, bytes.Repeat([]byte{0x00}, 16)...)
+	payload := make([]byte, 0, len(ct)+16)
+	payload = append(payload, ct...)
+	payload = append(payload, bytes.Repeat([]byte{0x00}, 16)...)
 
 	wrapper := map[string]any{
 		"iv":        b64urlNoPad(iv),
@@ -427,7 +435,9 @@ func TestDecodeToBeParsed_AnyTrailing16BytesAccepted(t *testing.T) {
 
 	key := sha256.Sum256([]byte(allAnimeKeyPhrase))
 	block, _ := aes.NewCipher(key[:])
-	iv := append(nonce, 0x00, 0x00, 0x00, 0x02)
+	iv := make([]byte, 0, len(nonce)+4)
+	iv = append(iv, nonce...)
+	iv = append(iv, 0x00, 0x00, 0x00, 0x02)
 	ct := make([]byte, len(plaintext))
 	cipher.NewCTR(block, iv).XORKeyStream(ct, []byte(plaintext))
 

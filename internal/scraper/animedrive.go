@@ -1096,7 +1096,7 @@ func (c *AnimeDriveClient) GetVideoURLWithSelection(episodeURL string) (string, 
 				opt.Label = opt.Quality.String()
 			}
 			if videoType == "hls" {
-				opt.Label = opt.Label + " (HLS)"
+				opt.Label += " (HLS)"
 			}
 			resolvedOptions = append(resolvedOptions, opt)
 		}

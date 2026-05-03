@@ -690,15 +690,15 @@ func mpvSendCommand(socketPath string, command []any) (any, error) {
 
 // windows
 // dialMPVSocket creates a connection to mpv's socket.
-//func dialMPVSocket(socketPath string) (net.Conn, error) {
+// func dialMPVSocket(socketPath string) (net.Conn, error) {
 //	if runtime.GOOS == "windows" {
-// Attempt named pipe on Windows
+//		// Attempt named pipe on Windows
 //		return net.Dial("unix", socketPath)
 //	} else {
-// Unix-like system uses Unix sockets
+//		// Unix-like system uses Unix sockets
 //		return net.Dial("unix", socketPath)
 //	}
-//}
+// }
 
 // Funções de download extraídas de player.go
 // downloadPart, combineParts, DownloadVideo, downloadWithYtDlp, ExtractVideoSources, getBestQualityURL, ExtractVideoSourcesWithPrompt, HandleBatchDownload, getEpisodeRange, findEpisode, createEpisodePath, fileExists
@@ -794,13 +794,14 @@ func HandleDownloadAndPlay(
 			// Play online - determine the best approach based on URL type
 			videoURLToPlay := ""
 
-			if isHLSStream {
+			switch {
+			case isHLSStream:
 				// HLS streams are already resolved, play directly
 				videoURLToPlay = videoURL
 				if util.IsDebug {
 					util.Debugf("HLS stream detected, playing directly: %s", videoURLToPlay)
 				}
-			} else if videoURL != "" && needsVideoExtraction(videoURL) {
+			case videoURL != "" && needsVideoExtraction(videoURL):
 				// Intermediate URL (e.g. animefire.io/video/) needs resolution
 				// to obtain the final CDN video URL.
 				if util.IsDebug {
@@ -809,7 +810,7 @@ func HandleDownloadAndPlay(
 				if resolved, err := extractActualVideoURL(videoURL); err == nil && resolved != "" {
 					videoURLToPlay = resolved
 				}
-			} else if videoURL != "" && strings.HasPrefix(videoURL, "http") {
+			case videoURL != "" && strings.HasPrefix(videoURL, "http"):
 				// The enhanced API already resolved a direct stream URL (CDN,
 				// mp4, etc.). Use it directly — re-extracting may trigger
 				// duplicate quality prompts or cause CDN URLs to expire.
@@ -817,7 +818,7 @@ func HandleDownloadAndPlay(
 				if util.IsDebug {
 					util.Debugf("Using resolved stream URL directly: %s", videoURLToPlay)
 				}
-			} else if videoURL != "" {
+			case videoURL != "":
 				// Non-HTTP URL (e.g. episode ID). Try legacy extraction.
 				if len(episodes) > 0 && selectedEpisodeNum > 0 {
 					selectedEp, found := findEpisode(episodes, selectedEpisodeNum)
@@ -976,7 +977,8 @@ func downloadAndPlayEpisode(
 		numThreads := 4 // Define the number of threads for downloading
 
 		// Check URL type and use appropriate download method
-		if isBloggerProxyURL(videoURL) {
+		switch {
+		case isBloggerProxyURL(videoURL):
 			// Download directly from googlevideo CDN, bypassing the proxy.
 			// Uses independent surf clients per chunk for parallel download
 			// with Chrome TLS and automatic resume on connection drops.
@@ -1043,10 +1045,10 @@ func downloadAndPlayEpisode(
 				fmt.Printf(format, a...)
 			})
 
-		} else if strings.Contains(videoURL, "blogger.com") ||
+		case strings.Contains(videoURL, "blogger.com") ||
 			LooksLikeHLS(videoURL) ||
 			strings.Contains(videoURL, "wixmp.com") ||
-			strings.Contains(videoURL, "sharepoint.com") {
+			strings.Contains(videoURL, "sharepoint.com"):
 			// Use yt-dlp with progress bar
 			m := &model{
 				progress: progress.New(progress.WithDefaultBlend()),
@@ -1160,7 +1162,7 @@ func downloadAndPlayEpisode(
 				fmt.Printf(format, a...)
 			})
 
-		} else {
+		default:
 			// Initialize progress model
 			m := &model{
 				progress: progress.New(progress.WithDefaultBlend()),

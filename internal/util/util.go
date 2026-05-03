@@ -836,7 +836,8 @@ func handleMovieDownloadMode(args []string, isRange bool, isAll bool, quality, s
 		return TreatingAnimeName(showName), ErrMovieDownloadRequested
 	}
 
-	if isTV && isRange {
+	switch {
+	case isTV && isRange:
 		// TV episode range download: goanime -dm -r "TV Show" season start-end
 		if len(args) < 3 {
 			return "", fmt.Errorf("TV episode range download requires show name, season number, and episode range\nUsage: goanime -dm -r \"TV Show\" 1 1-5")
@@ -890,7 +891,7 @@ func handleMovieDownloadMode(args []string, isRange bool, isAll bool, quality, s
 
 		return TreatingAnimeName(showName), ErrMovieDownloadRequested
 
-	} else if isTV {
+	case isTV:
 		// Single TV episode download: goanime -dm --type tv "TV Show" season episode
 		if len(args) < 3 {
 			return "", fmt.Errorf("TV episode download requires show name, season number, and episode number\nUsage: goanime -dm --type tv \"TV Show\" 1 5")
@@ -927,7 +928,7 @@ func handleMovieDownloadMode(args []string, isRange bool, isAll bool, quality, s
 
 		return TreatingAnimeName(showName), ErrMovieDownloadRequested
 
-	} else {
+	default:
 		// Movie download: goanime -dm "Movie Name"
 		movieName := strings.Join(args, " ")
 

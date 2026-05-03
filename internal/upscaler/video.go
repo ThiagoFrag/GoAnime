@@ -591,7 +591,7 @@ func EstimateUpscaleTime(videoPath string, opts Anime4KOptions) (time.Duration, 
 	// Adjust for quality settings
 	timePerFrame := baseTimePerFrame * time.Duration(opts.Passes)
 	if opts.FastMode {
-		timePerFrame = timePerFrame / 2
+		timePerFrame /= 2
 	}
 
 	totalTime := time.Duration(info.TotalFrames) * timePerFrame / time.Duration(runtime.NumCPU())

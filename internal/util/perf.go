@@ -254,19 +254,21 @@ func (pt *PerfTracker) PrintReport() {
 			totalStr := entry.metric.TotalTime.Round(time.Millisecond).String()
 			avgStr := avgTime.Round(time.Millisecond).String()
 
-			if entry.metric.TotalTime > 5*time.Second {
+			switch {
+			case entry.metric.TotalTime > 5*time.Second:
 				totalStr = perfSlowStyle.Render(totalStr)
-			} else if entry.metric.TotalTime < 500*time.Millisecond {
+			case entry.metric.TotalTime < 500*time.Millisecond:
 				totalStr = perfFastStyle.Render(totalStr)
-			} else {
+			default:
 				totalStr = perfValueStyle.Render(totalStr)
 			}
 
-			if avgTime > 2*time.Second {
+			switch {
+			case avgTime > 2*time.Second:
 				avgStr = perfSlowStyle.Render(avgStr)
-			} else if avgTime < 200*time.Millisecond {
+			case avgTime < 200*time.Millisecond:
 				avgStr = perfFastStyle.Render(avgStr)
-			} else {
+			default:
 				avgStr = perfValueStyle.Render(avgStr)
 			}
 

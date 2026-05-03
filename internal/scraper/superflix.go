@@ -261,11 +261,12 @@ func (c *SuperFlixClient) parseCards(doc *goquery.Document) []*SuperFlixMedia {
 		card.Find("button").Each(func(_ int, btn *goquery.Selection) {
 			msg, _ := btn.Attr("data-msg")
 			copyVal, _ := btn.Attr("data-copy")
-			if strings.Contains(msg, "TMDB") {
+			switch {
+			case strings.Contains(msg, "TMDB"):
 				tmdbID = copyVal
-			} else if strings.Contains(msg, "IMDB") {
+			case strings.Contains(msg, "IMDB"):
 				imdbID = copyVal
-			} else if strings.Contains(msg, "Link") {
+			case strings.Contains(msg, "Link"):
 				linkURL = copyVal
 			}
 		})
@@ -683,11 +684,12 @@ func (c *SuperFlixClient) GetVideoAPI(ctx context.Context, playerBaseURL, videoH
 		return "", "", fmt.Errorf("failed to decode video API response: %w", err)
 	}
 
-	if result.SecuredLink != "" {
+	switch {
+	case result.SecuredLink != "":
 		streamURL = result.SecuredLink
-	} else if result.VideoSource != "" {
+	case result.VideoSource != "":
 		streamURL = result.VideoSource
-	} else {
+	default:
 		return "", "", fmt.Errorf("no stream URL in video API response")
 	}
 

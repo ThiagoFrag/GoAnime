@@ -1846,11 +1846,12 @@ func (c *FlixHQClient) parseMediaItem(s *goquery.Selection) *FlixHQMedia {
 	var mediaType MediaType
 	var mediaID string
 
-	if strings.Contains(href, "/tv/") {
+	switch {
+	case strings.Contains(href, "/tv/"):
 		mediaType = MediaTypeTV
-	} else if strings.Contains(href, "/movie/") {
+	case strings.Contains(href, "/movie/"):
 		mediaType = MediaTypeMovie
-	} else {
+	default:
 		return nil
 	}
 

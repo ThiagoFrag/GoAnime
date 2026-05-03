@@ -1586,7 +1586,8 @@ func HandleBatchDownload(episodes []models.Episode, anime *models.Anime) error {
 				// Native HLS first for .m3u8 — handles obfuscated segment extensions
 				// (.jpg, .png) and "live" HLS (no #EXT-X-ENDLIST) that break yt-dlp.
 				// Also for URLs with extensions yt-dlp rejects (.aspx, .php, etc.).
-				if strings.Contains(videoURL, ".m3u8") || hasUnsafeExtension(videoURL) {
+				switch {
+				case strings.Contains(videoURL, ".m3u8") || hasUnsafeExtension(videoURL):
 					err = downloadWithNativeHLS(videoURL, episodePath, progressModel)
 					if err != nil && errors.Is(err, hls.ErrSeparateAudioTracks) {
 						util.Debugf("Episode %d: HLS has separate audio tracks, using yt-dlp: %v", epNum, err)
@@ -1602,7 +1603,7 @@ func HandleBatchDownload(episodes []models.Episode, anime *models.Anime) error {
 						progressModel.resetProgressReceived()
 						err = downloadWithYtDlp(videoURL, episodePath, progressModel)
 					}
-				} else if strings.Contains(videoURL, "blogger.com") {
+				case strings.Contains(videoURL, "blogger.com"):
 					// Blogger URLs: extract googlevideo CDN URL and download directly
 					cdnURL, extractErr := extractBloggerGoogleVideoURL(videoURL)
 					if extractErr != nil {
@@ -1611,11 +1612,11 @@ func HandleBatchDownload(episodes []models.Episode, anime *models.Anime) error {
 					} else {
 						err = downloadBloggerDirect(cdnURL, episodePath, 4, progressModel)
 					}
-				} else if strings.Contains(videoURL, ".mpd") || strings.Contains(videoURL, "repackager.wixmp.com") {
+				case strings.Contains(videoURL, ".mpd") || strings.Contains(videoURL, "repackager.wixmp.com"):
 					err = downloadWithYtDlp(videoURL, episodePath, progressModel)
-				} else if anime.Source == "Animefire.io" || strings.Contains(videoURL, "lightspeedst.net") {
+				case anime.Source == "Animefire.io" || strings.Contains(videoURL, "lightspeedst.net"):
 					err = downloadAnimeFireDirectWithFallback(sourceURL, videoURL, episodePath, progressModel)
-				} else {
+				default:
 					// Plain MP4 (including blogger proxy) — multi-threaded Range download
 					err = DownloadVideo(videoURL, episodePath, 4, progressModel)
 				}
@@ -1873,7 +1874,8 @@ func HandleBatchDownloadRange(episodes []models.Episode, anime *models.Anime, st
 				// Native HLS first for .m3u8 — handles obfuscated segment extensions
 				// (.jpg, .png) and "live" HLS (no #EXT-X-ENDLIST) that break yt-dlp.
 				// Also for URLs with extensions yt-dlp rejects (.aspx, .php, etc.).
-				if strings.Contains(videoURL, ".m3u8") || hasUnsafeExtension(videoURL) {
+				switch {
+				case strings.Contains(videoURL, ".m3u8") || hasUnsafeExtension(videoURL):
 					dlErr = downloadWithNativeHLS(videoURL, episodePath, progressModel)
 					if dlErr != nil && errors.Is(dlErr, hls.ErrSeparateAudioTracks) {
 						util.Debugf("Episode %d: HLS has separate audio tracks, using yt-dlp: %v", epNum, dlErr)
@@ -1889,7 +1891,7 @@ func HandleBatchDownloadRange(episodes []models.Episode, anime *models.Anime, st
 						progressModel.resetProgressReceived()
 						dlErr = downloadWithYtDlp(videoURL, episodePath, progressModel)
 					}
-				} else if strings.Contains(videoURL, "blogger.com") {
+				case strings.Contains(videoURL, "blogger.com"):
 					// Blogger URLs: extract googlevideo CDN URL and download directly
 					cdnURL, extractErr := extractBloggerGoogleVideoURL(videoURL)
 					if extractErr != nil {
@@ -1898,11 +1900,11 @@ func HandleBatchDownloadRange(episodes []models.Episode, anime *models.Anime, st
 					} else {
 						dlErr = downloadBloggerDirect(cdnURL, episodePath, 4, progressModel)
 					}
-				} else if strings.Contains(videoURL, ".mpd") || strings.Contains(videoURL, "repackager.wixmp.com") {
+				case strings.Contains(videoURL, ".mpd") || strings.Contains(videoURL, "repackager.wixmp.com"):
 					dlErr = downloadWithYtDlp(videoURL, episodePath, progressModel)
-				} else if anime.Source == "Animefire.io" || strings.Contains(videoURL, "lightspeedst.net") {
+				case anime.Source == "Animefire.io" || strings.Contains(videoURL, "lightspeedst.net"):
 					dlErr = downloadAnimeFireDirectWithFallback(sourceURL, videoURL, episodePath, progressModel)
-				} else {
+				default:
 					// Plain MP4 (including blogger proxy) — multi-threaded Range download
 					dlErr = DownloadVideo(videoURL, episodePath, 4, progressModel)
 				}
