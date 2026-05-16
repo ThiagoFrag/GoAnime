@@ -5,7 +5,7 @@
 
 ---
 
-## FASE 1 ⬜ — Lógica Pura Simples (~50 funções)
+## FASE 1 ✅ — Lógica Pura Simples (~50 funções)
 **Pacotes:** `models`, `version`, `pkg/goanime/types`, `api/source`, `api/aniskip`, `api/series`, `api/anime_url_title`
 
 | Pacote | Arquivo | Funções | Tipo |
@@ -22,7 +22,7 @@
 
 ---
 
-## FASE 2 ⬜ — API Pura (~45 funções)
+## FASE 2 ✅ — API Pura (~45 funções)
 **Pacotes:** `api/anime.go`, `api/episodes.go`, `api/enhanced.go` (funções puras), `api/allanime_smart.go`
 
 | Arquivo | Funções | Tipo |
@@ -36,7 +36,7 @@
 
 ---
 
-## FASE 3 ⬜ — Segurança SSRF + Player Puro (~40 funções)
+## FASE 3 ✅ — Segurança SSRF + Player Puro (~40 funções)
 **Pacotes:** `api/api.go`, `scraper/ssrf.go`, `api/movie/ssrf.go`, `player/` (funções puras)
 
 | Arquivo | Funções | Tipo |
@@ -52,7 +52,7 @@
 
 ---
 
-## FASE 4 ⬜ — Scraper Infraestrutura (~45 funções)
+## FASE 4 ✅ — Scraper Infraestrutura (~45 funções)
 **Pacotes:** `scraper/source_diagnostic.go`, `scraper/source_circuit.go`, `scraper/source_health.go`, `scraper/errors.go`, `scraper/unified.go` (helpers puros)
 
 | Arquivo | Funções | Tipo |
@@ -67,7 +67,7 @@
 
 ---
 
-## FASE 5 ⬜ — Unified Adapters (~45 funções)
+## FASE 5 ✅ — Unified Adapters (~45 funções)
 **Pacotes:** `scraper/unified.go` (todos os adapters: AnimeFire, Goyabu, AllAnime, NineAnime, FlixHQ, SFlix, AnimeDrive, SuperFlix)
 
 Cada adapter tem ~4-5 métodos (SearchAnime, GetAnimeEpisodes, GetStreamURL, GetType, GetClient). Total ~40 métodos de adapters + NewSuperFlixAdapterWithClient.
@@ -78,7 +78,7 @@ Cada adapter tem ~4-5 métodos (SearchAnime, GetAnimeEpisodes, GetStreamURL, Get
 
 ---
 
-## FASE 6 ⬜ — Util Completo (~83 funções)
+## FASE 6 ✅ — Util Completo (~83 funções)
 **Pacotes:** `util/util.go`, `util/httpclient.go`, `util/perf.go`, `util/logger.go`, `util/help.go`, `util/ytdlp.go`
 
 | Arquivo | Funções | Tipo |
@@ -94,7 +94,7 @@ Cada adapter tem ~4-5 métodos (SearchAnime, GetAnimeEpisodes, GetStreamURL, Get
 
 ---
 
-## FASE 7 ⬜ — FlixHQ Scraper (~54 funções)
+## FASE 7 ✅ — FlixHQ Scraper (~54 funções)
 **Arquivo:** `internal/scraper/flixhq.go`
 
 **Pré-requisito:** Criar fixtures HTML em `internal/scraper/testdata/flixhq/`
@@ -105,7 +105,7 @@ Todas as 54 funções com `httptest.Server` + HTML fixtures. Incluindo: NewFlixH
 
 ---
 
-## FASE 8 ⬜ — SFlix Scraper (~46 funções)
+## FASE 8 ✅ — SFlix Scraper (~46 funções)
 **Arquivo:** `internal/scraper/sflix.go`
 
 **Pré-requisito:** Criar fixtures HTML em `internal/scraper/testdata/sflix/`
@@ -116,7 +116,7 @@ Mesmo padrão FlixHQ. Todas as 46 funções: NewSFlixClient, SearchMedia, GetSea
 
 ---
 
-## FASE 9 ⬜ — NineAnime + AnimeFire + Goyabu + AllAnime (~50 funções)
+## FASE 9 ✅ — NineAnime + AnimeFire + Goyabu + AllAnime (~50 funções)
 **Arquivos:** `nineanime.go`(21), `animefire.go`(8), `goyabu.go`(7), `allanime.go`(14)
 
 Todos com `httptest.Server`. Cada scraper tem SearchAnime, GetEpisodes, GetStreamURL + helpers internos.
@@ -125,7 +125,7 @@ Todos com `httptest.Server`. Cada scraper tem SearchAnime, GetEpisodes, GetStrea
 
 ---
 
-## FASE 10 ⬜ — AnimeDrive + SuperFlix + MediaManager (~90 funções)
+## FASE 10 ✅ — AnimeDrive + SuperFlix + MediaManager (~90 funções)
 **Arquivos:** `animedrive.go`(21), `superflix.go`(9), `media_manager.go`(60)
 
 MediaManager tem muitos delegates simples (GetFlixHQTrendingMovies, GetSFlixTrendingMovies, etc.) — rápidos de testar com mock.
@@ -193,16 +193,16 @@ Todos com `httptest.Server` mockando CDN. Funções TUI (promptPlay*) → testar
 
 | Fase | Escopo | Funções | Status |
 |---|---|---|---|
-| 1 | Models + Types + Source + AniSkip | ~50 | ⬜ |
-| 2 | API Pure (anime, episodes, enhanced, smart) | ~45 | ⬜ |
-| 3 | SSRF + Player Pure | ~40 | ⬜ |
-| 4 | Scraper Infrastructure | ~45 | ⬜ |
-| 5 | Unified Adapters | ~45 | ⬜ |
-| 6 | Util Completo | ~83 | ⬜ |
-| 7 | FlixHQ | ~54 | ⬜ |
-| 8 | SFlix | ~46 | ⬜ |
-| 9 | NineAnime + AnimeFire + Goyabu + AllAnime | ~50 | ⬜ |
-| 10 | AnimeDrive + SuperFlix + MediaManager | ~90 | ⬜ |
+| 1 | Models + Types + Source + AniSkip | ~50 | ✅ |
+| 2 | API Pure (anime, episodes, enhanced, smart) | ~45 | ✅ |
+| 3 | SSRF + Player Pure | ~40 | ✅ |
+| 4 | Scraper Infrastructure | ~45 | ✅ |
+| 5 | Unified Adapters | ~45 | ✅ |
+| 6 | Util Completo | ~83 | ✅ |
+| 7 | FlixHQ | ~54 | ✅ |
+| 8 | SFlix | ~46 | ✅ |
+| 9 | NineAnime + AnimeFire + Goyabu + AllAnime | ~50 | ✅ |
+| 10 | AnimeDrive + SuperFlix + MediaManager | ~90 | ✅ |
 | 11 | Player Completo | ~128 | ⬜ |
 | 12 | Downloader Completo | ~84 | ⬜ |
 | 13 | API Movie + Enhanced + Providers | ~100 | ⬜ |
