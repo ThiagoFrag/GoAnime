@@ -143,7 +143,7 @@ Funções TUI (askForDownload) → skip ou testar lógica interna.
 
 **Verificação:** `go test ./internal/player/ -v -race`
 
-**Sessão completa** — 1 teste dedicado por função (CLAUDE.md regra #1). Total: **312 testes** no pacote, **128/128 funções** cobertas. Cobertura `internal/player`: 22.3% → **40.7%**.
+**Sessão completa** — 1 teste dedicado por função (CLAUDE.md regra #1). Total: **312+ testes** no pacote, **128/128 funções** cobertas. Cobertura `internal/player`: 22.3% → **51.4%** (ceiling sem refatoração de produção — `api.SafeGet`/`api.SafeTransport` bloqueia loopback IPs, impedindo `httptest.Server` de exercitar as funções pesadas de rede: `DownloadVideo`, `extractVideoURL`, `fetchContent`, `extractActualVideoURL` animefire, `ExtractVideoSources`, `downloadBloggerDirect/Chunk`. Para passar de 60% seria necessário ou expor um hook de injeção de cliente em `internal/api` ou rodar testes contra um IP público mockado).
 
 Distribuição por arquivo (mantém padrão do repo `<source>_test.go` / `Test<Funcao>_<Cenario>`):
 

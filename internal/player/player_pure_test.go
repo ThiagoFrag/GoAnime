@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/alvarorichard/Goanime/internal/api/providers/metadata"
+	"github.com/alvarorichard/Goanime/internal/models"
 	"github.com/alvarorichard/Goanime/internal/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSanitizeMediaTarget(t *testing.T) {
@@ -200,25 +202,87 @@ func TestAskForPlayOffline_DoesNotPanic(t *testing.T) {
 	assert.NotPanics(t, func() { _ = askForPlayOffline() })
 }
 
-// HandleDownloadAndPlay loops on askForDownload (huh.NewSelect) which never
-// terminates without a TTY — testing the orchestration requires either a real
-// terminal or a major refactor (extract the loop body into a pure dispatcher).
-// CLAUDE.md allows skipping pure TUI orchestration; the dispatched branches
-// (askForDownload, HandleBatchDownload, handleUpscaleFromMenu, playVideo,
-// extractActualVideoURL, downloadAndPlayEpisode) are each covered by their
-// own dedicated tests in this package.
-func TestHandleDownloadAndPlay_SymbolPinned(t *testing.T) {
-	t.Parallel()
-	assert.NotNil(t, HandleDownloadAndPlay)
+// HandleDownloadAndPlay loops on askForDownload (huh.NewSelect). Without a
+// TTY, askForDownload errors and returns its sentinel "4" code which routes
+// to the play (default) branch. Each test below pins a different sub-branch
+// of the play path. All run serial — fuzzyfinder/tcell terminfo is package-
+// level and races with parallel tests.
+func TestHandleDownloadAndPlay_EmptyURLReturnsNoValidVideoURL(t *testing.T) {
+	SetAnimeName("HDP_EmptyURLTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	anime := &models.Anime{URL: "https://example.com/x", Source: "AllAnime"}
+	err := HandleDownloadAndPlay(
+		"", nil, 1, "https://example.com/x", "1", 0, 0, nil, "HDP_EmptyURLTest", 1, anime,
+	)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no valid video URL found")
 }
 
-// downloadAndPlayEpisode mirrors HandleDownloadAndPlay's structure: it is a
-// pure-orchestration function whose every collaborator is exercised in
-// isolation by sibling tests (DownloadVideo, downloadDirectHTTP,
-// downloadWithYtDlp, downloadWithNativeHLS, askAndPlayDownloadedEpisode,
-// playVideo). The dispatcher itself loops on huh.NewSelect and cannot be
-// driven without a TTY.
-func TestDownloadAndPlayEpisode_SymbolPinned(t *testing.T) {
-	t.Parallel()
-	assert.NotNil(t, downloadAndPlayEpisode)
+func TestHandleDownloadAndPlay_AnimeFireURLHitsExtractionBranch(t *testing.T) {
+	SetAnimeName("HDP_AnimeFireTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	anime := &models.Anime{URL: "https://example.com/x", Source: "AllAnime"}
+	err := HandleDownloadAndPlay(
+		"https://animefire.io/video/x", // needsVideoExtraction = true
+		nil, 1, "https://example.com/x", "1", 0, 0, nil, "HDP_AnimeFireTest", 1, anime,
+	)
+	// extractActualVideoURL goes through SafeGet → loopback rejected →
+	// resolved stays empty → final branch returns "no valid video URL".
+	require.Error(t, err)
 }
+
+// (HLS / plain-HTTP play branches: HandleDownloadAndPlay loops on
+// askForDownload → on TUI failure returns the play sentinel → playVideo →
+// catches ErrBackToDownloadOptions → continues the loop → infinite. Cannot
+// drive non-error play branches without a TTY. The dispatched routines
+// (playVideo, extractActualVideoURL, ExtractVideoSourcesWithPrompt) are
+// covered by sibling tests.)
+
+func TestDownloadAndPlayEpisode_EmptyURLReturnsError(t *testing.T) {
+	t.Parallel()
+	err := downloadAndPlayEpisode("", nil, 1, "https://x", "1", 0, 0, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "empty video URL")
+}
+
+func TestDownloadAndPlayEpisode_AnimeFireResolveFails(t *testing.T) {
+	// animefire.io/video/ → extractActualVideoURL calls api.SafeGet which
+	// rejects loopback (no real-network), so the resolve step fails fast.
+	SetAnimeName("DAPE_AnimeFireResolveTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	err := downloadAndPlayEpisode(
+		"https://animefire.io/video/loopback-blocked",
+		nil, 1, "https://x", "1", 0, 0, nil,
+	)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to resolve AnimeFire video URL")
+}
+
+func TestDownloadAndPlayEpisode_BloggerProxyURLBranch(t *testing.T) {
+	// isBloggerProxyURL → tries to use GetBloggerVideoURL which is empty
+	// (no proxy started) → error path.
+	SetAnimeName("DAPE_BloggerProxyTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	StopBloggerProxy() // ensure empty
+	err := downloadAndPlayEpisode(
+		"http://127.0.0.1:8080/blogger_proxy/x",
+		nil, 1, "https://x", "1", 0, 0, nil,
+	)
+	require.Error(t, err)
+}
+
+// (HLS branch coverage for downloadAndPlayEpisode is exercised indirectly
+// via TestDownloadWithNativeHLS_* — calling downloadAndPlayEpisode here
+// spawned a download goroutine that outlived the test and raced with other
+// tests on util.GlobalReferer.)
+
+// (TestDownloadAndPlayEpisode_ExistingFileSkipsDownloadButFailsAtPlay was
+// removed: with a host-side mpv present the test launched a real window and
+// without mpv the spawned DownloadVideo goroutine outlived the test and
+// raced with subsequent tests that mutate util.GlobalReferer. The exercised
+// branches (file-exists check, playVideo dispatch) are covered separately
+// by TestFileExists and TestPlayVideo_*.)

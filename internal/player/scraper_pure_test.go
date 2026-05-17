@@ -331,6 +331,27 @@ func TestGetVideoURLForEpisodeEnhanced_NilAnimeWithShortIDReturnsError(t *testin
 	require.Error(t, err)
 }
 
+func TestGetVideoURLForEpisodeEnhanced_NilAnimeHTTPDelegatesToLegacy(t *testing.T) {
+	// Nil anime + HTTP URL → delegates to GetVideoURLForEpisode →
+	// extractVideoURL (SafeGet blocked on loopback) returns an error.
+	_, err := GetVideoURLForEpisodeEnhanced(&models.Episode{URL: "http://127.0.0.1:1/x"}, nil)
+	require.Error(t, err)
+}
+
+func TestGetVideoURLForEpisodeEnhanced_AllAnimeSourceRoutesEnhanced(t *testing.T) {
+	// AllAnime source → routes through enhanced API. With short bogus ID
+	// the underlying client fails and an error surfaces.
+	anime := &models.Anime{Source: "AllAnime", URL: "shortid"}
+	_, err := GetVideoURLForEpisodeEnhanced(&models.Episode{URL: "shortid", Number: "1"}, anime)
+	require.Error(t, err)
+}
+
+func TestGetVideoURLForEpisode_HTTPURLDelegatesToExtraction(t *testing.T) {
+	// Non-AllAnime ID (HTTP URL) → extractVideoURL → SafeGet blocked → error.
+	_, err := GetVideoURLForEpisode("http://127.0.0.1:1/episode-page")
+	require.Error(t, err)
+}
+
 func TestExtractVideoURL_SSRFBlockedFromLoopbackHost(t *testing.T) {
 	t.Parallel()
 	// SafeGet rejects loopback IPs (SSRF guard). Function returns error.

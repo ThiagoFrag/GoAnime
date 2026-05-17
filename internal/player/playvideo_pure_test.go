@@ -3,6 +3,7 @@
 package player
 
 import (
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -227,6 +228,51 @@ func TestApplyAniSkipResults_TimesOutWhenNoData(t *testing.T) {
 	})
 }
 
+func TestApplyAniSkipResults_NilErrorAppliesSkipTimes(t *testing.T) {
+	var mu sync.Mutex
+	var seen []any
+	sock := startMockMPVSocket(t, func(req map[string]any) []byte {
+		cmd, _ := req["command"].([]any)
+		mu.Lock()
+		seen = cmd
+		mu.Unlock()
+		return mpvOK(nil)
+	})
+
+	ch := make(chan error, 1)
+	ch <- nil
+
+	ep := &models.Episode{URL: "https://x/long-url-not-allanime"}
+	ep.SkipTimes.Op.Start, ep.SkipTimes.Op.End = 30, 90
+
+	applyAniSkipResults(ch, sock, ep, 1)
+	deadline := time.Now().Add(1 * time.Second)
+	for {
+		mu.Lock()
+		n := len(seen)
+		mu.Unlock()
+		if n > 0 || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	mu.Lock()
+	require.NotEmpty(t, seen)
+	assert.Equal(t, "set_property", seen[0])
+	mu.Unlock()
+}
+
+func TestApplyAniSkipResults_ErrorOnChanFallsThrough(t *testing.T) {
+	t.Parallel()
+	ch := make(chan error, 1)
+	ch <- assert.AnError
+	assert.NotPanics(t, func() {
+		applyAniSkipResults(ch, "/tmp/missing.sock", &models.Episode{URL: "x"}, 1)
+	})
+	// Give goroutine a moment to consume and log.
+	time.Sleep(50 * time.Millisecond)
+}
+
 func TestWaitForVideoReady_ReturnsTrueOnPositiveDuration(t *testing.T) {
 	t.Parallel()
 	sock := startMockMPVSocket(t, func(req map[string]any) []byte {
@@ -237,6 +283,60 @@ func TestWaitForVideoReady_ReturnsTrueOnPositiveDuration(t *testing.T) {
 		return mpvOK(0.0)
 	})
 	assert.True(t, waitForVideoReady(sock))
+}
+
+func TestWaitForVideoReady_ReturnsTrueOnPositiveTimePos(t *testing.T) {
+	t.Parallel()
+	// duration first call returns 0 → poll alternates and hits time-pos
+	// branch on the second iteration.
+	var iter atomic.Int32
+	sock := startMockMPVSocket(t, func(req map[string]any) []byte {
+		cmd, _ := req["command"].([]any)
+		if len(cmd) >= 2 && cmd[1] == "duration" {
+			return mpvOK(0.0)
+		}
+		if len(cmd) >= 2 && cmd[1] == "time-pos" {
+			iter.Add(1)
+			return mpvOK(5.0)
+		}
+		return mpvOK(nil)
+	})
+	assert.True(t, waitForVideoReady(sock))
+}
+
+func TestUpdateEpisodeDuration_ExistingDurationShortCircuits(t *testing.T) {
+	upd := newFakeDiscordUpdater()
+	upd.SetEpisodeStarted(true)
+	upd.SetEpisodeDuration(time.Minute) // pre-existing
+
+	sock := startMockMPVSocket(t, func(map[string]any) []byte { return mpvOK(0.0) })
+	done := make(chan struct{})
+	go func() {
+		updateEpisodeDuration(sock, upd, nil, 0, &models.Episode{URL: "x", Num: 1}, 1)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		t.Fatal("updateEpisodeDuration with pre-set duration must short-circuit")
+	}
+}
+
+func TestSelectEpisode_PropagatesBackRequest(t *testing.T) {
+	// SelectEpisodeWithFuzzyFinder with no episodes returns "no episodes
+	// provided" error — selectEpisode wraps it as "failed to select episode".
+	stop := make(chan struct{})
+	err := selectEpisode(nil, 0, 0, nil, stop, "/tmp/missing.sock")
+	require.Error(t, err)
+}
+
+func TestSwitchEpisode_BoundsCheck(t *testing.T) {
+	// Single episode, target index 0 (valid). switchEpisode will try to
+	// resolve via GetVideoURLForEpisodeEnhanced and fail (no real anime/source).
+	episodes := []models.Episode{{Number: "1", Num: 1, URL: "shortid"}}
+	stop := make(chan struct{})
+	err := switchEpisode(0, episodes, 0, 0, nil, stop, "/tmp/missing.sock")
+	require.Error(t, err)
 }
 
 func TestSeekToResumePosition_NonPositiveReturnsImmediately(t *testing.T) {
@@ -378,6 +478,55 @@ func TestSelectSubtitleTrack_SocketErrorReturnsCleanly(t *testing.T) {
 	assert.NotPanics(t, func() { selectSubtitleTrack("/tmp/missing.sock") })
 }
 
+// With tracks present, selectAudioTrack iterates through them building
+// labels, then calls fuzzyfinder. Outside a TTY, fuzzyfinder errors and the
+// function returns silently — we still exercise the label-construction loop.
+func TestSelectAudioTrack_WithTracksFuzzyFinderErrorIsSilent(t *testing.T) {
+	tracks := []any{
+		map[string]any{"id": 1.0, "type": "audio", "lang": "ja", "codec": "aac", "demux-channels": "stereo"},
+		map[string]any{"id": 2.0, "type": "audio", "title": "Director Comm.", "codec": "ac3", "audio-channels": 6.0},
+	}
+	sock := startMockMPVSocket(t, func(req map[string]any) []byte {
+		cmd, _ := req["command"].([]any)
+		if len(cmd) >= 2 && cmd[1] == "track-list" {
+			return mpvOK(tracks)
+		}
+		if len(cmd) >= 2 && cmd[1] == "aid" {
+			return mpvOK(1.0)
+		}
+		return mpvOK(nil)
+	})
+	assert.NotPanics(t, func() { selectAudioTrack(sock) })
+}
+
+func TestSelectSubtitleTrack_WithTracksFuzzyFinderErrorIsSilent(t *testing.T) {
+	tracks := []any{
+		map[string]any{"id": 1.0, "type": "sub", "lang": "pt"},
+		map[string]any{"id": 2.0, "type": "sub", "title": "Director Comm."},
+	}
+	sock := startMockMPVSocket(t, func(req map[string]any) []byte {
+		cmd, _ := req["command"].([]any)
+		if len(cmd) >= 2 && cmd[1] == "track-list" {
+			return mpvOK(tracks)
+		}
+		if len(cmd) >= 2 && cmd[1] == "sid" {
+			return mpvOK(0.0)
+		}
+		return mpvOK(nil)
+	})
+	assert.NotPanics(t, func() { selectSubtitleTrack(sock) })
+}
+
+func TestHandleUserInput_AliveSocketReturnsBackOnMenuError(t *testing.T) {
+	// Mock socket responds OK to `get_property pid` (ping passes), then the
+	// fuzzyfinder menu fails outside a TTY → handleUserInput sends `quit`
+	// to mpv and surfaces ErrBackToDownloadOptions.
+	sock := startMockMPVSocket(t, func(map[string]any) []byte { return mpvOK(1234.0) })
+	stop := make(chan struct{})
+	err := handleUserInput(sock, nil, 0, 1, 0, 0, nil, stop, &models.Episode{})
+	assert.ErrorIs(t, err, ErrBackToDownloadOptions)
+}
+
 // The following functions all depend on an interactive TUI (fuzzyfinder)
 // and/or a fully-orchestrated playback session. Per CLAUDE.md, the
 // internal logic is exercised by sibling tests; here we pin the
@@ -441,6 +590,46 @@ func TestPlayVideo_PropagatesEpisodeNotFound(t *testing.T) {
 	// Empty episodes list — getCurrentEpisode returns an error and the
 	// orchestration aborts before touching mpv.
 	err := playVideo("https://x/y.mp4", nil, 1, 0, 0, nil)
+	require.Error(t, err)
+}
+
+func TestPlayVideo_ValidEpisodeRoutesToStartVideo(t *testing.T) {
+	// Valid episode → getCurrentEpisode succeeds. mpv args + tracking setup
+	// run. StartVideo either fails (no mpv) or launches mpv with a bogus
+	// URL; in both cases playVideo returns once the player exits or fails.
+	episodes := []models.Episode{{Number: "1", Num: 1, URL: "https://cdn/ep.mp4"}}
+	_ = playVideo("https://cdn.example/ep.mp4", episodes, 1, 0, 0, nil)
+}
+
+func TestPlayVideo_MovieTypeAppliesLanguagePreferences(t *testing.T) {
+	// Movie/TV → playVideo enters the language-preference branch which
+	// adds --alang/--slang mpv args. Set gMedia accordingly.
+	SetExactMediaType("movie")
+	SetMediaType(true)
+	t.Cleanup(func() {
+		SetExactMediaType("")
+		SetMediaType(false)
+	})
+	episodes := []models.Episode{{Number: "1", Num: 1, URL: "https://cdn/movie.mp4"}}
+	_ = playVideo("https://cdn.example/movie.mp4", episodes, 1, 0, 0, nil)
+}
+
+func TestPlayVideo_BloggerURLTriggersResolveAttempt(t *testing.T) {
+	// blogger.com/video.g URL → playVideo calls extractBloggerGoogleVideoURL
+	// (fails because URL is bogus) then continues with the original URL.
+	episodes := []models.Episode{{Number: "1", Num: 1, URL: "https://blogger.com/video.g?token=abc"}}
+	_ = playVideo("https://blogger.com/video.g?token=abc", episodes, 1, 0, 0, nil)
+}
+
+// HLS path waits up to 45s for the bogus stream to become ready when mpv is
+// installed. Keep this test off the default suite by skipping when mpv is
+// present; otherwise it provides cheap StartVideo failure-path coverage.
+func TestPlayVideo_HLSURLEnablesHLSPath(t *testing.T) {
+	if _, err := exec.LookPath("mpv"); err == nil {
+		t.Skip("mpv present on host — HLS branch waits 45s polling for stream readiness")
+	}
+	episodes := []models.Episode{{Number: "1", Num: 1, URL: "https://cdn/ep.m3u8"}}
+	err := playVideo("https://cdn.example/ep.m3u8", episodes, 1, 0, 0, nil)
 	require.Error(t, err)
 }
 

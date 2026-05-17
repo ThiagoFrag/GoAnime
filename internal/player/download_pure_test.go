@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 
@@ -88,6 +89,14 @@ func TestSafePartPath(t *testing.T) {
 		got, err := safePartPath("/tmp/sub/video.mp4", 7)
 		require.NoError(t, err)
 		assert.Contains(t, got, "video.mp4.part7")
+	})
+
+	t.Run("part embedded in dir name still resolves correctly", func(t *testing.T) {
+		t.Parallel()
+		// Use a path whose basename uniquely identifies the part file.
+		got, err := safePartPath("/tmp/dir.with.dots/video.mp4", 0)
+		require.NoError(t, err)
+		assert.Equal(t, "/tmp/dir.with.dots/video.mp4.part0", got)
 	})
 }
 
@@ -191,6 +200,33 @@ func TestCreateEpisodePath_BuildsPathAndCreatesDir(t *testing.T) {
 	require.NotEmpty(t, got)
 	_, statErr := os.Stat(filepath.Dir(got))
 	assert.NoError(t, statErr, "parent dir must exist")
+}
+
+func TestCreateEpisodePath_MovieTypeFlatStructure(t *testing.T) {
+	SetAnimeName("CreateEpisodePathMovieTest", 0)
+	SetMediaType(true)
+	SetExactMediaType("movie")
+	t.Cleanup(func() {
+		SetAnimeName("", 0)
+		SetMediaType(false)
+		SetExactMediaType("")
+	})
+
+	got, err := createEpisodePath("https://example.com/movie/x", 1)
+	require.NoError(t, err)
+	require.NotEmpty(t, got)
+	assert.NotContains(t, filepath.Base(got), "Season")
+}
+
+func TestCreateEpisodePath_NoAnimeNameUsesURLBasedFallback(t *testing.T) {
+	SetAnimeName("", 0)
+	SetMediaType(false)
+	SetExactMediaType("")
+
+	got, err := createEpisodePath("https://example.com/anime/some-fallback-slug", 7)
+	require.NoError(t, err)
+	require.NotEmpty(t, got)
+	assert.True(t, strings.HasSuffix(got, ".mp4"))
 }
 
 func TestFindEpisode(t *testing.T) {
@@ -403,9 +439,8 @@ func TestRunAnimeFireDirectDownloadWithFallback_NonAnimeFire404ReturnsOriginal(t
 }
 
 func TestDownloadAnimeFireDirectWithFallback_SetsGlobalReferer(t *testing.T) {
-	prev := util.GetGlobalReferer()
+	t.Cleanup(util.ClearGlobalReferer)
 	util.ClearGlobalReferer()
-	t.Cleanup(func() { util.SetGlobalReferer(prev) })
 
 	// Call with bogus URL so download errors instantly. Referer setup is
 	// what we are pinning here, not the download outcome.
@@ -452,6 +487,77 @@ func TestExtractVideoSourcesWithPrompt_BadURLReturnsError(t *testing.T) {
 	require.Error(t, err)
 }
 
+// downloadWithNativeHLS routes through util.GetDownloadClient() (surf).
+// surf does NOT enforce SSRF, so httptest loopback is reachable.
+
+func TestDownloadWithNativeHLS_InvalidURL(t *testing.T) {
+	t.Parallel()
+	err := downloadWithNativeHLS("http://bad\nurl", "/tmp/x.ts", &model{})
+	require.Error(t, err)
+}
+
+func TestDownloadWithNativeHLS_InvalidOutputPath(t *testing.T) {
+	t.Parallel()
+	err := downloadWithNativeHLS("https://cdn.example/x.m3u8", "-bad-name.ts", &model{})
+	require.Error(t, err)
+}
+
+func TestDownloadWithNativeHLS_HappyPathFromMockCDN(t *testing.T) {
+	// Mutates GlobalReferer (downloadWithNativeHLS reads it). Keep serial.
+	t.Cleanup(util.ClearGlobalReferer)
+	util.SetGlobalReferer("https://example.com/anime")
+
+	srv := mockHLSCDN(t)
+	t.Cleanup(srv.Close)
+
+	dest := homePath(t, "ep.ts")
+
+	require.NoError(t, downloadWithNativeHLS(srv.URL+"/normal.m3u8", dest, &model{}))
+
+	info, err := os.Stat(dest)
+	require.NoError(t, err)
+	assert.Greater(t, info.Size(), int64(0))
+}
+
+func TestDownloadWithNativeHLS_PropagatesHLSError(t *testing.T) {
+	// Master playlist with separate audio tracks → hls.DownloadToFileWithClient
+	// returns ErrSeparateAudioTracks, which downloadWithNativeHLS wraps.
+	srv := mockHLSCDN(t)
+	t.Cleanup(srv.Close)
+
+	dest := homePath(t, "sep.ts")
+
+	err := downloadWithNativeHLS(srv.URL+"/separate_audio.m3u8", dest, &model{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "native HLS download failed")
+}
+
+func TestDownloadWithNativeHLS_PropagatesProgressToModel(t *testing.T) {
+	srv := mockHLSCDN(t)
+	t.Cleanup(srv.Close)
+
+	dest := homePath(t, "ep-progress.ts")
+
+	m := &model{}
+	require.NoError(t, downloadWithNativeHLS(srv.URL+"/normal.m3u8", dest, m))
+
+	// At least one segment must have been written → progress observable.
+	assert.Greater(t, m.received, int64(0), "model.received should advance")
+}
+
+// homePath returns a unique scratch path under $HOME that satisfies
+// sanitizeOutputPath's "must stay under user home" guard. The file is removed
+// on cleanup.
+func homePath(t *testing.T, name string) string {
+	t.Helper()
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	dir, err := os.MkdirTemp(home, "goanime_native_hls_test_*")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+	return filepath.Join(dir, name)
+}
+
 func TestGetBestQualityURL_UnsupportedIdentifier(t *testing.T) {
 	// AllAnime path retries through the enhanced API which spawns goroutines —
 	// keep serial to avoid races with other tests that touch network globals.
@@ -460,13 +566,101 @@ func TestGetBestQualityURL_UnsupportedIdentifier(t *testing.T) {
 	require.Error(t, err)
 }
 
-// HandleBatchDownload, getEpisodeRange, handleExistingEpisodes, and
-// askAndPlayDownloadedEpisode each prompt the user via huh.NewInput /
-// fuzzyfinder. Per CLAUDE.md, TUI orchestration must be tested indirectly:
-// the dispatch helpers (findEpisode, createEpisodePath, fileExists,
-// printBatchDownloadLocation, batchDownloadError) each have their own
-// dedicated tests above. Here we pin the function symbols so adapter
-// regressions surface at compile time.
+func TestHandleBatchDownloadRange_InvalidRange(t *testing.T) {
+	t.Parallel()
+	anime := &models.Anime{URL: "https://x", Source: "AllAnime"}
+	err := HandleBatchDownloadRange(nil, anime, 10, 5)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid episode range")
+}
+
+func TestHandleBatchDownload_NoTTYErrorsOnRangePrompt(t *testing.T) {
+	util.InitLogger()
+	anime := &models.Anime{URL: "https://example.com/x", Source: "AllAnime"}
+	err := HandleBatchDownload(nil, anime)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid episode range")
+}
+
+func TestHandleBatchDownloadRange_AllEpisodesAlreadyDownloaded(t *testing.T) {
+	util.InitLogger()
+	SetAnimeName("HandleBatchRangeAllExistingTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	episodes := []models.Episode{{Num: 1, Number: "1"}, {Num: 2, Number: "2"}}
+	for _, ep := range episodes {
+		p, err := createEpisodePath("https://example.com/anime/all-existing", ep.Num)
+		require.NoError(t, err)
+		require.NoError(t, os.MkdirAll(filepath.Dir(p), 0o700))
+		require.NoError(t, os.WriteFile(p, []byte("fake"), 0o600))
+		t.Cleanup(func() { _ = os.Remove(p) })
+	}
+
+	anime := &models.Anime{URL: "https://example.com/anime/all-existing", Source: "AllAnime"}
+	// All episodes exist → first pass skips each; episodesToDownload empty →
+	// falls through to handleExistingEpisodes which calls fuzzyfinder
+	// (errors outside TTY).
+	err := HandleBatchDownloadRange(episodes, anime, 1, 2)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "episode selection error")
+}
+
+func TestHandleBatchDownloadRange_AllEpisodesMissingFromList(t *testing.T) {
+	util.InitLogger() // util.Logger.Warn is called from HandleBatchDownloadRange
+	SetAnimeName("HandleBatchRangeMissingTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	anime := &models.Anime{URL: "https://example.com/x", Source: "AllAnime"}
+	err := HandleBatchDownloadRange(nil, anime, 1, 2)
+	// All findEpisode lookups fail → newBatchDownloadError surfaces.
+	require.Error(t, err)
+	var batchErr batchDownloadError
+	require.ErrorAs(t, err, &batchErr)
+	assert.Len(t, batchErr.Failures, 2)
+}
+
+func TestHandleExistingEpisodes_WithDownloadedFilesEntersFuzzyFinder(t *testing.T) {
+	SetAnimeName("HandleExistingDownloadedTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	episodes := []models.Episode{{Num: 1, Number: "1"}, {Num: 2, Number: "2"}}
+	for _, ep := range episodes {
+		p, err := createEpisodePath("https://example.com/anime/x", ep.Num)
+		require.NoError(t, err)
+		require.NoError(t, os.MkdirAll(filepath.Dir(p), 0o700))
+		require.NoError(t, os.WriteFile(p, []byte("fake"), 0o600))
+		t.Cleanup(func() { _ = os.Remove(p) })
+	}
+
+	// With downloaded files present, the function builds a menu and calls
+	// fuzzyfinder which fails outside a TTY → propagates the selection error.
+	err := handleExistingEpisodes(episodes, "https://example.com/anime/x", 1, 2)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "episode selection error")
+}
+
+func TestAskAndPlayDownloadedEpisode_WithDownloadedFilesEntersFuzzyFinder(t *testing.T) {
+	SetAnimeName("AskAndPlayDownloadedExistingTest", 1)
+	t.Cleanup(func() { SetAnimeName("", 0) })
+
+	episodes := []models.Episode{{Num: 5, Number: "5"}}
+	p, err := createEpisodePath("https://example.com/anime/y", 5)
+	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(filepath.Dir(p), 0o700))
+	require.NoError(t, os.WriteFile(p, []byte("fake"), 0o600))
+	t.Cleanup(func() { _ = os.Remove(p) })
+
+	err = askAndPlayDownloadedEpisode(episodes, "https://example.com/anime/y", 5, 5)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "episode selection error")
+}
+
+// HandleBatchDownload and getEpisodeRange each prompt the user via
+// huh.NewInput / fuzzyfinder. Per CLAUDE.md, TUI orchestration must be
+// tested indirectly: the dispatch helpers (findEpisode, createEpisodePath,
+// fileExists, printBatchDownloadLocation, batchDownloadError) each have
+// their own dedicated tests above. Here we pin the function symbols so
+// adapter regressions surface at compile time.
 
 func TestHandleBatchDownload_SymbolPinned(t *testing.T) {
 	t.Parallel()
