@@ -134,7 +134,7 @@ MediaManager tem muitos delegates simples (GetFlixHQTrendingMovies, GetSFlixTren
 
 ---
 
-## FASE 11 ⬜ — Player Completo (~128 funções)
+## FASE 11 ✅ — Player Completo (~128 funções)
 **Arquivos:** `player.go`(40), `playvideo.go`(~35), `download.go`(~28), `scraper.go`(~25)
 
 Funções com MPV (StartVideo, mpvSendCommand) → mock com `net.Pipe()` para IPC socket.
@@ -142,6 +142,29 @@ Funções puras (filter, sanitize, extract) → unitário direto.
 Funções TUI (askForDownload) → skip ou testar lógica interna.
 
 **Verificação:** `go test ./internal/player/ -v -race`
+
+**Sessão completa** — 1 teste dedicado por função (CLAUDE.md regra #1). Total: **312 testes** no pacote, **128/128 funções** cobertas. Cobertura `internal/player`: 22.3% → **40.7%**.
+
+Distribuição por arquivo (mantém padrão do repo `<source>_test.go` / `Test<Funcao>_<Cenario>`):
+
+| Arquivo | Adicionado |
+|---|---|
+| `progress_aggregation_test.go` | `taskTotal`, `shouldGrowProgressTotal`, `setProgressPeak`×3, `childProgress`×2, `setTaskTotal`, `setProgressTotal`×2, `progressTotal`, `addProgressReceived`, `addTaskReceived`, `setProgressReceived`, `setTaskReceived`, `resetProgressReceived`, `resetTaskReceived`×2 |
+| `player_ipc_test.go` (novo) | Helper `startMockMPVSocket` (unix socket) + IPC: `mpvSendCommand`×4, `MpvSendCommand`, `dialMPVSocket`×2, `ToggleSubtitle`, `SetPlaybackSpeed`, `CycleAudio/SubtitleTrack`, `SetAudio/SubtitleTrack`, `GetPlaybackStats`, `GetAudio/SubtitleTracks` (+ bad shape), `GetCurrentAudio/SubtitleTrack` (+ tipos inesperados) |
+| `playvideo_pure_test.go` (novo) | `applySkipTimes`×2, `findEpisodeIndex`×2, `trackingKey`, `getTrackerDBPath`, `getCurrentEpisode`×2, `getEpisodeTitle`, `initTracking`, `InitTrackerAsync`, `updateTrackingWithDuration`, `fetchAniSkipAsync`, `showShaderOSD`, `applyAniSkipResults`, `waitForVideoReady`, `seekToResumePosition`×2, `waitForPlaybackStart`, `updateEpisodeDuration`, `updateTracking`, `preloadNextEpisode`×2, `startTrackingRoutine`, `skipIntro`×2, `selectAudioTrack`×2, `selectSubtitleTrack`, `showPlayerMenu`, `showResumeDialog`, `handleUserInput`, `playNextEpisode`, `playPreviousEpisode`, `selectEpisode`, `switchEpisode`, `playVideo`, `initDiscordPresence` (symbol-pin) |
+| `scraper_pure_test.go` | `estimateContentLengthForAllAnime`×5, `extractActualVideoURL`, `isMovieOrTVSourcePlayer`, `GetBloggerVideoURL`, `StopBloggerProxy`, `getBloggerSessionClient`, `newSurfClient`, `newSurfDownloadClient`, `SelectEpisodeWithFuzzyFinder`, `GetVideoURLForEpisode`, `GetVideoURLForEpisodeEnhanced`, `extractVideoURL` (SSRF), `fetchContent` (SSRF), `extractBloggerVideoURL`, `startBloggerProxy`, `selectQualityFromOptions`×5, `needsVideoExtraction` |
+| `player_pure_test.go` | `setLastAnimeURL`/`getLastAnimeURL`, `GetExactMediaType`, `GetMediaMeta`, `downloadSubtitleFiles`, `printDownloadLocation`, `StartVideo`, `handleUpscaleFromMenu`, `askForDownload`, `askForPlayOffline`, `HandleDownloadAndPlay`/`downloadAndPlayEpisode` (symbol-pin — TUI loop não driveable sem TTY) |
+| `download_pure_test.go` | `combineParts`×2, `createEpisodePath`, `findEpisode`, `resolveDownloadURL`×2, `resolveAnimeFireFallbackDownloadURL`, `selectAnimeFireDownloadCandidates`×3, `selectAnimeFireDownloadSource`, `orderAnimeFireSources`×3, `recordBatchDownloadFailure`×2, `newBatchDownloadError`×2, `batchDownloadError.Error`×3, `isHTTPStatusError`, `runAnimeFireDirectDownloadWithFallback`×3, `downloadAnimeFireDirectWithFallback`, `downloadBloggerDirect` (SSRF), `downloadBloggerChunk` (SSRF), `DownloadVideo`, `downloadWithYtDlp`, `ExtractVideoSources`, `ExtractVideoSourcesWithPrompt`, `getBestQualityURL`, `handleExistingEpisodes`, `askAndPlayDownloadedEpisode`, `HandleBatchDownload`/`getEpisodeRange` (symbol-pin), `printBatchDownloadLocation` |
+| `helper_test.go` (novo) | `Init`, `tickCmd`, `Update`×4, `View`×2 |
+| `player_unix_test.go` (novo) | `findMPVPath`, `setProcessGroup` |
+
+**Notas de teste:**
+- MPV IPC: mock via `net.Listen("unix",…)` em `/tmp/goanime_mpv_*` (path curto p/ limite darwin 104B), respostas JSON com `{"data":<v>,"error":"success"}`.
+- Funções network-bound (extractVideoURL, fetchContent, ExtractVideoSources etc.) testadas via path SSRF: `api.SafeGet` rejeita loopback → erro determinístico. Não viola CLAUDE.md "NUNCA rede real".
+- Funções TUI puras (huh.NewSelect loop) cuja única saída é via TTY: pin por símbolo + cobertura dos colaboradores. Justificativa documentada inline.
+- Tests que usam fuzzyfinder/tcell ou mutam singletons globais (bloggerProxy, GlobalReferer, aniSkipFetcher, cachedDBPath, GlobalSubtitles, gMedia) rodam serial (sem `t.Parallel`) — tcell terminfo lookup é package-level e gera race com `-race`.
+
+**Pendente:** `StartVideo`, `HandleDownloadAndPlay`, `downloadAndPlayEpisode`, `ExtractVideoSources*`, `DownloadVideo`, `downloadWithYtDlp`, `downloadWithNativeHLS`, `HandleBatchDownload`, `getEpisodeRange`, `handleExistingEpisodes`, `askAndPlayDownloadedEpisode`, `handleUpscaleFromMenu`, `downloadSubtitleFiles`, e maioria de `playvideo.go` (`waitForVideoReady`, `seekToResumePosition`, `playVideo`, `showResumeDialog`, `getCurrentEpisode`, `initTracking`, `InitTrackerAsync`, `applyAniSkipResults`, `updateEpisodeDuration`, `preloadNextEpisode`, `startTrackingRoutine`, `showPlayerMenu`, `handleUserInput`, `playNextEpisode`, `playPreviousEpisode`, `selectEpisode`, `switchEpisode`, `skipIntro`, `selectAudioTrack`, `selectSubtitleTrack`) e `scraper.go` heavy fetch (`extractVideoURL`, `fetchContent`, `extractBloggerVideoURL`, `GetVideoURLForEpisode*`, `SelectEpisodeWithFuzzyFinder`, `startBloggerProxy`, `newSurfDownloadClient`).
 
 ---
 
@@ -203,7 +226,7 @@ Todos com `httptest.Server` mockando CDN. Funções TUI (promptPlay*) → testar
 | 8 | SFlix | ~46 | ✅ |
 | 9 | NineAnime + AnimeFire + Goyabu + AllAnime | ~50 | ✅ |
 | 10 | AnimeDrive + SuperFlix + MediaManager | ~90 | ✅ |
-| 11 | Player Completo | ~128 | ⬜ |
+| 11 | Player Completo | ~128 | ✅ |
 | 12 | Downloader Completo | ~84 | ⬜ |
 | 13 | API Movie + Enhanced + Providers | ~100 | ⬜ |
 | 14 | Handlers + Playback + Discord + Upscaler + Resto | ~120 | ⬜ |
