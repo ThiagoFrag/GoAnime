@@ -59,7 +59,7 @@ func HandlePlaybackMode(animeName string) {
 		var episodes []models.Episode
 		var epErr error
 
-		needsInteractiveEpisodes := anime.Source == "FlixHQ" ||
+		needsInteractiveEpisodes := anime.Source == "SFlix" ||
 			anime.MediaType == models.MediaTypeMovie ||
 			anime.MediaType == models.MediaTypeTV
 

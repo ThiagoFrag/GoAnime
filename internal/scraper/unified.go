@@ -31,8 +31,7 @@ const (
 	AllAnimeType ScraperType = iota
 	AnimefireType
 	AnimeDriveType
-	FlixHQType    // Movies and TV Shows source
-	SFlixType     // Alternative Movies and TV Shows source
+	SFlixType     // Movies and TV Shows source
 	NineAnimeType // 9animetv.to anime source
 	GoyabuType    // PT-BR anime source
 	SuperFlixType // SuperFlix PT-BR movies/series/animes/doramas
@@ -386,11 +385,11 @@ func (sm *ScraperManager) tagResults(results []*models.Anime, scraperType Scrape
 	sourceName := sm.getScraperDisplayName(scraperType)
 	isPTBR := scraperType == AnimefireType || scraperType == AnimeDriveType || scraperType == GoyabuType
 
-	// For FlixHQ/SFlix, pre-scan to find titles that need a [Movie]/[TV]
+	// For SFlix, pre-scan to find titles that need a [Movie]/[TV]
 	// disambiguation tag (same title appears as both movie and TV show).
 	// SuperFlix always shows media type since it mixes movies/series/animes/doramas.
 	var disambig map[string]bool
-	if scraperType == FlixHQType || scraperType == SFlixType {
+	if scraperType == SFlixType {
 		disambig = needsMediaTypeDisambig(results)
 	}
 
@@ -422,8 +421,8 @@ func (sm *ScraperManager) tagResults(results []*models.Anime, scraperType Scrape
 				default:
 					anime.Name = fmt.Sprintf("[PT-BR] %s", anime.Name)
 				}
-			case FlixHQType, SFlixType:
-				// FlixHQ/SFlix: add [Movie]/[TV] only when disambiguation is needed.
+			case SFlixType:
+				// SFlix: add [Movie]/[TV] only when disambiguation is needed.
 				key := strings.ToLower(strings.TrimSpace(anime.Name))
 				if disambig[key] {
 					switch anime.MediaType {
@@ -531,8 +530,6 @@ func (sm *ScraperManager) GetScraper(scraperType ScraperType) (UnifiedScraper, e
 // no probable HTML root (GraphQL endpoints, opaque APIs, etc.).
 func (sm *ScraperManager) getScraperBaseURL(scraperType ScraperType) string {
 	switch scraperType {
-	case FlixHQType:
-		return FlixHQBase
 	case SFlixType:
 		return SFlixBase
 	case NineAnimeType:
@@ -556,8 +553,6 @@ func (sm *ScraperManager) getScraperDisplayName(scraperType ScraperType) string 
 		return "Animefire.io"
 	case AnimeDriveType:
 		return "AnimeDrive"
-	case FlixHQType:
-		return "FlixHQ"
 	case SFlixType:
 		return "SFlix"
 	case NineAnimeType:
@@ -580,8 +575,6 @@ func (sm *ScraperManager) getLanguageTag(scraperType ScraperType) string {
 		return "[PT-BR]"
 	case AnimeDriveType:
 		return "[PT-BR]"
-	case FlixHQType:
-		return "[English]"
 	case SFlixType:
 		return "[English]"
 	case NineAnimeType:
@@ -723,99 +716,6 @@ func (a *AnimeDriveAdapter) GetStreamURL(episodeURL string, options ...any) (str
 
 func (a *AnimeDriveAdapter) GetType() ScraperType {
 	return AnimeDriveType
-}
-
-// FlixHQAdapter adapts FlixHQClient to UnifiedScraper interface for movies and TV shows
-type FlixHQAdapter struct {
-	client *FlixHQClient
-}
-
-func (a *FlixHQAdapter) SearchAnime(query string, options ...any) ([]*models.Anime, error) {
-	media, err := a.client.SearchMedia(query)
-	if err != nil {
-		return nil, err
-	}
-
-	var animes []*models.Anime
-	for _, m := range media {
-		anime := m.ToAnimeModel()
-		// Set the media type
-		if m.Type == MediaTypeMovie {
-			anime.MediaType = models.MediaTypeMovie
-		} else {
-			anime.MediaType = models.MediaTypeTV
-		}
-		anime.Year = m.Year
-		animes = append(animes, anime)
-	}
-
-	return animes, nil
-}
-
-func (a *FlixHQAdapter) GetAnimeEpisodes(animeURL string) ([]models.Episode, error) {
-	// For FlixHQ, animeURL contains the media ID
-	// This needs to be called differently for movies vs TV shows
-	// For movies, return a single "episode"
-	// For TV shows, we need to get seasons first
-
-	// This is a simplified implementation - in practice, you'd need to know if it's a movie or TV show
-	return nil, fmt.Errorf("for FlixHQ, use GetSeasons and GetEpisodes directly on the client")
-}
-
-func (a *FlixHQAdapter) GetStreamURL(episodeURL string, options ...any) (string, map[string]string, error) {
-	// Parse options
-	provider := "Vidcloud"
-	quality := "1080"
-	subsLanguage := "english"
-
-	for i, opt := range options {
-		if s, ok := opt.(string); ok {
-			switch i {
-			case 0:
-				provider = s
-			case 1:
-				quality = s
-			case 2:
-				subsLanguage = s
-			}
-		}
-	}
-
-	// Get embed link directly from episode ID
-	embedLink, err := a.client.GetEmbedLink(episodeURL)
-	if err != nil {
-		return "", nil, fmt.Errorf("failed to get embed link: %w", err)
-	}
-
-	streamInfo, err := a.client.ExtractStreamInfo(embedLink, quality, subsLanguage)
-	if err != nil {
-		return "", nil, fmt.Errorf("failed to extract stream info: %w", err)
-	}
-
-	metadata := make(map[string]string)
-	metadata["source"] = "flixhq"
-	metadata["provider"] = provider
-	metadata["quality"] = quality
-
-	// Include subtitle URLs in metadata
-	if len(streamInfo.Subtitles) > 0 {
-		var subURLs []string
-		for _, sub := range streamInfo.Subtitles {
-			subURLs = append(subURLs, sub.URL)
-		}
-		metadata["subtitles"] = strings.Join(subURLs, ",")
-	}
-
-	return streamInfo.VideoURL, metadata, nil
-}
-
-func (a *FlixHQAdapter) GetType() ScraperType {
-	return FlixHQType
-}
-
-// GetClient returns the underlying FlixHQ client for direct access
-func (a *FlixHQAdapter) GetClient() *FlixHQClient {
-	return a.client
 }
 
 // SFlixAdapter adapts SFlixClient to UnifiedScraper interface for movies and TV shows

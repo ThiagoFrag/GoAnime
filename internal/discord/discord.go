@@ -232,7 +232,7 @@ func (rpu *RichPresenceUpdater) updateDiscordPresence(forceUpdate bool) {
 	}
 
 	// Detect content type
-	isMovieOrTV := rpu.anime.IsMovieOrTV() || rpu.anime.Source == "FlixHQ"
+	isMovieOrTV := rpu.anime.IsMovieOrTV() || rpu.anime.Source == "SFlix"
 
 	// Get title
 	title := rpu.getTitle(isMovieOrTV)

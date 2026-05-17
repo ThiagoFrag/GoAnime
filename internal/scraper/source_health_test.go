@@ -15,7 +15,6 @@ func TestDefaultHealthCheckQuery(t *testing.T) {
 		source ScraperType
 		want   string
 	}{
-		{"flixhq", FlixHQType, "dexter"},
 		{"sflix", SFlixType, "dexter"},
 		{"superflix", SuperFlixType, "dexter"},
 		{"allanime default", AllAnimeType, "naruto"},

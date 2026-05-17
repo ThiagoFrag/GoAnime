@@ -52,13 +52,6 @@ func TestAllAnimeAdapter_Client(t *testing.T) {
 	assert.Same(t, client, a.Client())
 }
 
-func TestFlixHQAdapter_GetClient(t *testing.T) {
-	t.Parallel()
-	client := NewFlixHQClient()
-	a := &FlixHQAdapter{client: client}
-	assert.Same(t, client, a.GetClient())
-}
-
 func TestSFlixAdapter_GetClient(t *testing.T) {
 	t.Parallel()
 	client := NewSFlixClient()

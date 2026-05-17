@@ -68,7 +68,7 @@
 ---
 
 ## FASE 5 ✅ — Unified Adapters (~45 funções)
-**Pacotes:** `scraper/unified.go` (todos os adapters: AnimeFire, Goyabu, AllAnime, NineAnime, FlixHQ, SFlix, AnimeDrive, SuperFlix)
+**Pacotes:** `scraper/unified.go` (todos os adapters: AnimeFire, Goyabu, AllAnime, NineAnime, SFlix, AnimeDrive, SuperFlix)
 
 Cada adapter tem ~4-5 métodos (SearchAnime, GetAnimeEpisodes, GetStreamURL, GetType, GetClient). Total ~40 métodos de adapters + NewSuperFlixAdapterWithClient.
 
@@ -94,14 +94,8 @@ Cada adapter tem ~4-5 métodos (SearchAnime, GetAnimeEpisodes, GetStreamURL, Get
 
 ---
 
-## FASE 7 ✅ — FlixHQ Scraper (~54 funções)
-**Arquivo:** `internal/scraper/flixhq.go`
-
-**Pré-requisito:** Criar fixtures HTML em `internal/scraper/testdata/flixhq/`
-
-Todas as 54 funções com `httptest.Server` + HTML fixtures. Incluindo: NewFlixHQClient, SearchMedia, GetTrending, GetRecentMovies, GetRecentTV, GetInfo, GetServers, GetSources, ExtractStreamInfo, GetStreamURL, GetAvailableQualities, GetMovieQualities, SelectQualityInteractive, QualityToLabel, LabelToQuality, filterSubtitlesByLanguage, extractSearchResults, parseMovieServers, parseTVServers, decorateRequest, ToMedia, ToEpisodeModel, ToStreamInfo, etc.
-
-**Verificação:** `go test ./internal/scraper/ -run "TestFlixHQ" -v -race`
+## FASE 7 ❌ — REMOVIDA (FlixHQ deletado)
+> FlixHQ scraper foi removido em 2026-05-17 — site caiu. Funções/arquivos deletados: `internal/scraper/flixhq.go`, `flixhq_test.go`, `flixhq_quality_test.go`, `internal/scraper/movie/flixhq.go`, `internal/api/flixhq_flow_test.go`. MediaManager/handlers/downloader/playback agora SFlix-only.
 
 ---
 
@@ -110,7 +104,7 @@ Todas as 54 funções com `httptest.Server` + HTML fixtures. Incluindo: NewFlixH
 
 **Pré-requisito:** Criar fixtures HTML em `internal/scraper/testdata/sflix/`
 
-Mesmo padrão FlixHQ. Todas as 46 funções: NewSFlixClient, SearchMedia, GetSeasons, GetEpisodes, GetInfo, GetServers, GetSources, ExtractStreamInfo, GetStreamURL, GetAvailableQualities, SelectBestQuality, sortServersByPriority, detectMediaType, QualityToLabel, ToMedia, ToEpisodeModel, ToStreamInfo, etc.
+Padrão httptest.Server + HTML fixtures. Todas as 46 funções: NewSFlixClient, SearchMedia, GetSeasons, GetEpisodes, GetInfo, GetServers, GetSources, ExtractStreamInfo, GetStreamURL, GetAvailableQualities, SelectBestQuality, sortServersByPriority, detectMediaType, QualityToLabel, ToMedia, ToEpisodeModel, ToStreamInfo, etc.
 
 **Verificação:** `go test ./internal/scraper/ -run "TestSFlix" -v -race`
 
@@ -128,7 +122,7 @@ Todos com `httptest.Server`. Cada scraper tem SearchAnime, GetEpisodes, GetStrea
 ## FASE 10 ✅ — AnimeDrive + SuperFlix + MediaManager (~90 funções)
 **Arquivos:** `animedrive.go`(21), `superflix.go`(9), `media_manager.go`(60)
 
-MediaManager tem muitos delegates simples (GetFlixHQTrendingMovies, GetSFlixTrendingMovies, etc.) — rápidos de testar com mock.
+MediaManager tem delegates simples (GetSFlixTrendingMovies, etc.) — rápidos de testar com mock.
 
 **Verificação:** `go test ./internal/scraper/ -run "TestAnimeDrive|TestSuperFlix|TestMediaManager" -v -race`
 
@@ -168,12 +162,29 @@ Distribuição por arquivo (mantém padrão do repo `<source>_test.go` / `Test<F
 
 ---
 
-## FASE 12 ⬜ — Downloader Completo (~84 funções)
+## FASE 12 ✅ — Downloader Completo (~84 funções)
 **Arquivos:** `downloader.go`(33), `movie_downloader.go`(28), `nineanime_downloader.go`(16), `hls/hls.go`(7)
 
 Todos com `httptest.Server` mockando CDN. Funções TUI (promptPlay*) → testar lógica, não UI.
 
 **Verificação:** `go test ./internal/downloader/... -v -race`
+
+**Sessão completa** — 1 teste dedicado por função (CLAUDE.md regra #1). Total: **84/84 funções** cobertas. Cobertura: `internal/downloader` 0% → **25.3%**, `internal/downloader/hls` 71%→ **89.0%**.
+
+Distribuição por arquivo:
+
+| Arquivo | Adicionado |
+|---|---|
+| `hls/hls_test.go` (append) | `NewDownloader`, `Download` (wrapper), `parseMediaPlaylist`×2 (direct + non-HLS), `DownloadToFile` (default-client) |
+| `downloader_test.go` (novo) | `NewEpisodeDownloader`, `NewEpisodeDownloaderWithAnime`, `DownloadSingleEpisode`, `DownloadEpisodeRange`×2, `DownloadAllEpisodes`×2, `downloadConcurrentWithProgress`, `downloadMultipleWithProgress` (pin), `downloadEpisodeWithSharedProgress`×2, `findEpisodeByNumber`, `printDownloadLocation`, `fileExists`, `sanitizeDestPath`×3, `episodeFilename`×3, `resolveEpisodeSeason`×2, `episodeDir`×3, `getBestQualityURL` (SSRF), `getContentLength`×3, `estimateContentLengthForAllAnime`×2, `downloadWithProgress`/`downloadHTTPWithProgress`/`downloadM3U8WithYtDlp`/`downloadWithYtDlp` (pin), `downloadEpisodeWithProgress` (empty URL), `isUnsafeExtError`×4, `promptPlayExisting`/`promptPlayDownloaded` (closed stdin), `promptPlayDownloadedRangeHuh`/`promptPlayExistingRangeHuh` (empty list), `playEpisode` (pin), `tickCmd`, `progressModel.Init`/`Update`×3/`View` |
+| `movie_downloader_test.go` (novo) | `NewMovieDownloader`, `NewMovieDownloaderWithConfig`×2, `DownloadMovie`×2, `DownloadTVEpisode`, `DownloadTVEpisodeRange`, `DownloadAllSeasons`×2, `getSFlixMovieStream`/`getSFlixEpisodeStream` (pin), `downloadMovieWithProgress`/`downloadHTTPWithProgress`/`downloadM3U8WithYtDlp`/`downloadM3U8WithYtDlpDirect`/`downloadM3U8WithNativeHLS` (pin), `extractRefererFromStreamURL`×4, `getContentLength`×2, `fileExists`, `sanitizeDestPath`×3, `promptPlayExisting`/`promptPlayDownloaded` (closed stdin), `playMovie` (pin), `extractMediaIDFromURL`×4, `movieTickCmd`, `movieProgressModel.Init`/`Update`×3/`View` |
+| `nineanime_downloader_test.go` (novo) | `NewNineAnimeDownloader`×2, `DownloadAllEpisodes`/`DownloadSingleEpisode`/`DownloadEpisodeRange` (nil + inverted), `buildOutputDir`×2, `episodeFilename`×2, `resolveStream` (pin), `promptSubtitleLanguage`×5, `downloadSubtitles` (no-tracks), `downloadFile`×3, `downloadEpisodeWithProgress` (skip-existing), `downloadBatchWithProgress` (all-existing), `downloadStream`/`downloadNativeHLS`/`downloadWithYtDlp` (pin), `isRetryableDownloadError`×7 |
+
+**Notas de teste:**
+- Funções network-bound (downloadHTTPWithProgress, downloadM3U8WithYtDlp*, downloadStream, downloadNativeHLS, etc.) testadas via path SSRF: `api.SafeTransport` rejeita loopback → erro determinístico. Funções yt-dlp wrapped + funções que driveriam Bubble Tea `p.Run()` ficam como pin de símbolo (cobertura 0% nessas, mas teste dedicado existe). Justificativa: yt-dlp lança binário externo; tea.Program.Run requer TTY.
+- TUI prompts (`promptPlay*`) testados via `withClosedStdin(t)` que redireciona `os.Stdin` para `/dev/null` — `fmt.Scanln` retorna EOF → caminho "n / cancel". Roda serial (sem `t.Parallel`) por mutar global.
+- `promptSubtitleLanguage` testado em todos os branches pré-configurados (none/all/exact match/cached/empty) sem precisar do fuzzyfinder TUI.
+- 46 funções pinned/0% — todas têm teste dedicado nomeado. Para passar de 25% seria necessário injetar yt-dlp mock + harness Bubble Tea ou skip-test em FFmpeg/binário externo.
 
 ---
 
@@ -222,12 +233,12 @@ Todos com `httptest.Server` mockando CDN. Funções TUI (promptPlay*) → testar
 | 4 | Scraper Infrastructure | ~45 | ✅ |
 | 5 | Unified Adapters | ~45 | ✅ |
 | 6 | Util Completo | ~83 | ✅ |
-| 7 | FlixHQ | ~54 | ✅ |
+| 7 | FlixHQ | — | ❌ (removido) |
 | 8 | SFlix | ~46 | ✅ |
 | 9 | NineAnime + AnimeFire + Goyabu + AllAnime | ~50 | ✅ |
 | 10 | AnimeDrive + SuperFlix + MediaManager | ~90 | ✅ |
 | 11 | Player Completo | ~128 | ✅ |
-| 12 | Downloader Completo | ~84 | ⬜ |
+| 12 | Downloader Completo | ~84 | ✅ |
 | 13 | API Movie + Enhanced + Providers | ~100 | ⬜ |
 | 14 | Handlers + Playback + Discord + Upscaler + Resto | ~120 | ⬜ |
 | **TOTAL** | | **~983** | |

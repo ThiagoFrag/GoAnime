@@ -12,7 +12,7 @@ import (
 func skipIfTempDisabled(t *testing.T, kind SourceKind) {
 	t.Helper()
 	switch kind {
-	case FlixHQ, SFlix, NineAnime:
+	case SFlix, NineAnime:
 		t.Skipf("TEMP-DISABLED: %s source is commented out in sourceDefs", kind)
 	}
 }
@@ -26,7 +26,6 @@ func TestResolve_ExplicitSource(t *testing.T) {
 		{"AllAnime", "AllAnime", AllAnime},
 		{"AnimeFire via Animefire.io", "Animefire.io", AnimeFire},
 		{"AnimeFire direct", "AnimeFire", AnimeFire},
-		{"FlixHQ", "FlixHQ", FlixHQ},
 		{"SFlix", "SFlix", SFlix},
 		{"9Anime", "9Anime", NineAnime},
 		{"AnimeDrive", "AnimeDrive", AnimeDrive},
@@ -63,8 +62,8 @@ func TestResolve_MediaType(t *testing.T) {
 		mediaType models.MediaType
 		wantKind  SourceKind
 	}{
-		{"movie", models.MediaTypeMovie, FlixHQ},
-		{"tv", models.MediaTypeTV, FlixHQ},
+		{"movie", models.MediaTypeMovie, SFlix},
+		{"tv", models.MediaTypeTV, SFlix},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,9 +90,8 @@ func TestResolve_NameTags(t *testing.T) {
 		{"superflix tag", "Naruto [SuperFlix]", SuperFlix},
 		{"9anime tag", "Naruto [9Anime]", NineAnime},
 		{"multilanguage tag", "Naruto [Multilanguage]", NineAnime},
-		{"movie tag", "Inception [Movie]", FlixHQ},
-		{"tv tag", "Breaking Bad [TV]", FlixHQ},
-		{"flixhq tag", "Movie [FlixHQ]", FlixHQ},
+		{"movie tag", "Inception [Movie]", SFlix},
+		{"tv tag", "Breaking Bad [TV]", SFlix},
 		{"sflix tag", "Movie [SFlix]", SFlix},
 	}
 	for _, tt := range tests {
@@ -118,7 +116,6 @@ func TestResolve_URLPatterns(t *testing.T) {
 		{"animefire URL", "https://animefire.plus/naruto", AnimeFire},
 		{"goyabu URL", "https://goyabu.to/naruto", Goyabu},
 		{"allanime URL", "https://allanime.to/anime/abc", AllAnime},
-		{"flixhq URL", "https://flixhq.to/movie/inception", FlixHQ},
 		{"sflix URL", "https://sflix.to/movie/inception", SFlix},
 		{"9anime URL", "https://9anime.to/watch/naruto", NineAnime},
 		{"superflix URL", "https://superflix.to/naruto", SuperFlix},
@@ -202,9 +199,9 @@ func TestResolve_BestEffortKind(t *testing.T) {
 		t.Errorf("BestEffortKind for Unknown should be AllAnime, got %s", r.BestEffortKind())
 	}
 
-	r2 := ResolvedSource{Kind: FlixHQ, Reason: "test"}
-	if r2.BestEffortKind() != FlixHQ {
-		t.Errorf("BestEffortKind for FlixHQ should be FlixHQ, got %s", r2.BestEffortKind())
+	r2 := ResolvedSource{Kind: SFlix, Reason: "test"}
+	if r2.BestEffortKind() != SFlix {
+		t.Errorf("BestEffortKind for SFlix should be SFlix, got %s", r2.BestEffortKind())
 	}
 }
 

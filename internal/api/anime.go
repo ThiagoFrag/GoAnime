@@ -208,7 +208,7 @@ func getBoolValue(data map[string]any, field string) bool {
 // Enrich anime data from AniList
 func enrichAnimeData(anime *models.Anime) error {
 	// Use TMDB enrichment for FlixHQ movies/TV shows
-	if anime.Source == "FlixHQ" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
+	if anime.Source == "SFlix" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
 		util.Debug("Using TMDB enrichment for movie/TV content", "name", anime.Name)
 		return movie.EnrichMedia(anime)
 	}

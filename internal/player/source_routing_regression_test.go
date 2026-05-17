@@ -25,7 +25,7 @@ func TestIsMovieOrTVSourcePlayer_SuperFlixMovie_2026_05_01(t *testing.T) {
 
 func TestIsMovieOrTVSourcePlayer_FlixHQ_2026_05_01(t *testing.T) {
 	t.Parallel()
-	anime := &models.Anime{Source: "FlixHQ", MediaType: models.MediaTypeMovie}
+	anime := &models.Anime{Source: "SFlix", MediaType: models.MediaTypeMovie}
 	assert.True(t, isMovieOrTVSourcePlayer(anime))
 }
 

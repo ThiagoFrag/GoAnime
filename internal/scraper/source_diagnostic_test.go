@@ -16,8 +16,8 @@ import (
 func TestNewHTTPStatusErrorClassifiesCloudflareOriginDown(t *testing.T) {
 	t.Parallel()
 
-	err := NewHTTPStatusError("FlixHQ", "search", 521)
-	diagnostic := DiagnoseError("FlixHQ", "search", err)
+	err := NewHTTPStatusError("SFlix", "search", 521)
+	diagnostic := DiagnoseError("SFlix", "search", err)
 
 	require.NotNil(t, diagnostic)
 	assert.Equal(t, DiagnosticSourceUnavailable, diagnostic.Kind)

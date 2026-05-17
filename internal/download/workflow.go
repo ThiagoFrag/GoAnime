@@ -277,7 +277,7 @@ func HandleMovieDownloadRequest(request *util.DownloadRequest) error {
 
 	// Convert to models.Anime for compatibility with downloader
 	anime := selectedMedia.ToAnimeModel()
-	anime.Source = selectedMedia.Source
+	anime.Source = "SFlix"
 
 	// Enrich with TMDB/OMDb metadata to get official title, year, and external IDs.
 	// This is essential for Plex/Jellyfin-compatible folder naming — without it,
@@ -453,13 +453,13 @@ func HandleMovieDownloadRequest(request *util.DownloadRequest) error {
 }
 
 // selectMovieFromResults presents a selection UI for movie/TV results
-func selectMovieFromResults(results []*scraper.FlixHQMedia, preferMovie, preferTV bool) (*scraper.FlixHQMedia, error) {
+func selectMovieFromResults(results []*scraper.SFlixMedia, preferMovie, preferTV bool) (*scraper.SFlixMedia, error) {
 	if len(results) == 0 {
 		return nil, fmt.Errorf("no results to select from")
 	}
 
 	// Filter results if preference is set
-	var filtered []*scraper.FlixHQMedia
+	var filtered []*scraper.SFlixMedia
 	if preferMovie {
 		for _, r := range results {
 			if r.Type == scraper.MediaTypeMovie {
@@ -495,11 +495,7 @@ func selectMovieFromResults(results []*scraper.FlixHQMedia, preferMovie, preferT
 		if r.Year != "" {
 			year = fmt.Sprintf(" (%s)", r.Year)
 		}
-		source := ""
-		if r.Source != "" {
-			source = fmt.Sprintf(" - %s", r.Source)
-		}
-		items = append(items, fmt.Sprintf("%s %s%s%s", typeTag, r.Title, year, source))
+		items = append(items, fmt.Sprintf("%s %s%s - SFlix", typeTag, r.Title, year))
 	}
 
 	idx, err := tui.Find(items, func(i int) string {
@@ -514,7 +510,7 @@ func selectMovieFromResults(results []*scraper.FlixHQMedia, preferMovie, preferT
 
 // selectSeason presents a selection UI for TV seasons
 func selectSeason(mm *scraper.MediaManager, mediaID string) (int, error) {
-	seasons, err := mm.GetTVSeasons(mediaID)
+	seasons, err := mm.GetSFlixTVSeasons(mediaID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get seasons: %w", err)
 	}
@@ -544,7 +540,7 @@ func selectSeason(mm *scraper.MediaManager, mediaID string) (int, error) {
 
 // selectEpisode presents a selection UI for TV episodes
 func selectEpisode(mm *scraper.MediaManager, mediaID string, seasonNum int) (int, error) {
-	seasons, err := mm.GetTVSeasons(mediaID)
+	seasons, err := mm.GetSFlixTVSeasons(mediaID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get seasons: %w", err)
 	}
@@ -554,7 +550,7 @@ func selectEpisode(mm *scraper.MediaManager, mediaID string, seasonNum int) (int
 	}
 
 	season := seasons[seasonNum-1]
-	episodes, err := mm.GetTVEpisodes(season.ID)
+	episodes, err := mm.GetSFlixTVEpisodes(season.ID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get episodes: %w", err)
 	}
@@ -580,7 +576,7 @@ func selectEpisode(mm *scraper.MediaManager, mediaID string, seasonNum int) (int
 
 // getSeasonEpisodeCount returns the number of episodes in a given season
 func getSeasonEpisodeCount(mm *scraper.MediaManager, mediaID string, seasonNum int) (int, error) {
-	seasons, err := mm.GetTVSeasons(mediaID)
+	seasons, err := mm.GetSFlixTVSeasons(mediaID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get seasons: %w", err)
 	}
@@ -590,7 +586,7 @@ func getSeasonEpisodeCount(mm *scraper.MediaManager, mediaID string, seasonNum i
 	}
 
 	season := seasons[seasonNum-1]
-	episodes, err := mm.GetTVEpisodes(season.ID)
+	episodes, err := mm.GetSFlixTVEpisodes(season.ID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get episodes for season %d: %w", seasonNum, err)
 	}

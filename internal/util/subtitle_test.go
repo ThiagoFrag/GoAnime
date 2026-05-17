@@ -48,7 +48,7 @@ func TestIs9AnimeSource(t *testing.T) {
 		{"9Anime", true},
 		{"AllAnime", false},
 		{"AnimeFire", false},
-		{"FlixHQ", false},
+		{"SFlix", false},
 		{"", false},
 		{"9anime", false}, // case-sensitive
 	}
@@ -450,7 +450,7 @@ func TestFullFlow_NonNineAnime_SubtitlePromptNotTriggered(t *testing.T) {
 	}
 
 	// For FlixHQ, same thing
-	SetGlobalAnimeSource("FlixHQ")
+	SetGlobalAnimeSource("SFlix")
 
 	if Is9AnimeSource() {
 		t.Error("Is9AnimeSource() should be false for FlixHQ")
@@ -508,7 +508,7 @@ func TestSubtitlePromptTrigger_9Anime_AlwaysTriggered(t *testing.T) {
 func TestSubtitlePromptTrigger_FlixHQ_OnlyMultipleTracks(t *testing.T) {
 	t.Cleanup(resetSubtitleState)
 
-	SetGlobalAnimeSource("FlixHQ")
+	SetGlobalAnimeSource("SFlix")
 
 	// For non-9Anime (FlixHQ), the condition is:
 	//   } else if len(util.GlobalSubtitles) > 1 { util.SelectSubtitles() }
@@ -532,7 +532,7 @@ func TestSubtitlePromptTrigger_FlixHQ_OnlyMultipleTracks(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			resetSubtitleState()
-			SetGlobalAnimeSource("FlixHQ")
+			SetGlobalAnimeSource("SFlix")
 			if tc.tracks != nil {
 				SetGlobalSubtitles(tc.tracks)
 			}

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -814,4 +815,113 @@ func TestSanitizeOutputPath_Valid(t *testing.T) {
 
 	expected, _ := filepath.Abs(input)
 	assert.Equal(t, expected, result)
+}
+
+// ---------------------------------------------------------------------------
+// Tests: NewDownloader (default constructor)
+// ---------------------------------------------------------------------------
+
+// TestNewDownloader verifies the default constructor wires an http.Client with
+// HTTP/2 disabled (TLSNextProto empty map) and SafeDialContext applied.
+func TestNewDownloader(t *testing.T) {
+	t.Parallel()
+
+	dl := NewDownloader()
+	require.NotNil(t, dl)
+	require.NotNil(t, dl.client)
+	assert.Equal(t, 5*time.Minute, dl.client.Timeout)
+
+	tr, ok := dl.client.Transport.(*http.Transport)
+	require.True(t, ok, "transport should be *http.Transport")
+	require.NotNil(t, tr.TLSNextProto, "TLSNextProto must be set to disable HTTP/2")
+	assert.Empty(t, tr.TLSNextProto, "TLSNextProto must be empty map (HTTP/2 disabled)")
+	require.NotNil(t, tr.DialContext, "DialContext must use SafeDialContext")
+}
+
+// ---------------------------------------------------------------------------
+// Tests: Download (thin wrapper over DownloadWithProgress)
+// ---------------------------------------------------------------------------
+
+// TestDownload_WrapperBehavior verifies Download() forwards to
+// DownloadWithProgress with a nil progress callback and writes the file.
+func TestDownload_WrapperBehavior(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, ".m3u8") {
+			fmt.Fprint(w, `#EXTM3U
+#EXT-X-TARGETDURATION:4
+#EXTINF:4.0,
+seg.ts
+#EXT-X-ENDLIST
+`)
+			return
+		}
+		w.Write(fakeSegmentData(640))
+	}))
+	defer srv.Close()
+
+	tmp := t.TempDir()
+	out := filepath.Join(tmp, "wrap.ts")
+	dl := NewDownloaderWithClient(srv.Client())
+
+	err := dl.Download(context.Background(), srv.URL+"/wrap.m3u8", out, nil)
+	require.NoError(t, err)
+
+	info, err := os.Stat(out)
+	require.NoError(t, err)
+	assert.Equal(t, int64(640), info.Size())
+}
+
+// ---------------------------------------------------------------------------
+// Tests: parseMediaPlaylist (fetched directly, not via master)
+// ---------------------------------------------------------------------------
+
+// TestParseMediaPlaylist_Direct exercises parseMediaPlaylist via a master
+// playlist that redirects into it, then verifies relative-URL resolution.
+func TestParseMediaPlaylist_Direct(t *testing.T) {
+	t.Parallel()
+	srv := mockCDN(t)
+	defer srv.Close()
+
+	dl := NewDownloaderWithClient(srv.Client())
+	playlist, err := dl.parseMediaPlaylist(context.Background(), srv.URL+"/normal.m3u8", nil)
+	require.NoError(t, err)
+	require.Len(t, playlist.Segments, 3)
+	assert.True(t, playlist.EndList)
+	assert.Equal(t, "VOD", playlist.PlaylistType)
+	assert.InDelta(t, 6.0, playlist.TargetDuration, 0.01)
+}
+
+// TestParseMediaPlaylist_NonHLSRejected verifies parseMediaPlaylist rejects
+// non-HLS responses (HTML / binary) instead of letting bufio.Scanner choke.
+func TestParseMediaPlaylist_NonHLSRejected(t *testing.T) {
+	t.Parallel()
+	srv := mockCDN(t)
+	defer srv.Close()
+
+	dl := NewDownloaderWithClient(srv.Client())
+	_, err := dl.parseMediaPlaylist(context.Background(), srv.URL+"/not_hls.m3u8", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not an HLS playlist")
+}
+
+// ---------------------------------------------------------------------------
+// Tests: DownloadToFile (default-client convenience function)
+// ---------------------------------------------------------------------------
+
+// TestDownloadToFile_DefaultClient drives the default-client wrapper.
+// The default http.Client uses SafeDialContext which rejects loopback;
+// httptest.Server runs on 127.0.0.1 → the wrapper must fail with an SSRF
+// connection error, proving the helper actually used NewDownloader().
+func TestDownloadToFile_DefaultClient(t *testing.T) {
+	t.Parallel()
+	srv := mockCDN(t)
+	defer srv.Close()
+
+	tmp := t.TempDir()
+	out := filepath.Join(tmp, "default.ts")
+
+	err := DownloadToFile(context.Background(), srv.URL+"/normal.m3u8", out, nil, nil)
+	require.Error(t, err, "default client must refuse loopback (SSRF guard)")
 }

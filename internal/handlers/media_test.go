@@ -54,7 +54,7 @@ func TestExtractIDFromURL(t *testing.T) {
 
 func TestConvertSubtitles(t *testing.T) {
 	t.Parallel()
-	in := []scraper.FlixHQSubtitle{
+	in := []scraper.SFlixSubtitle{
 		{URL: "u1", Language: "en", Label: "English"},
 		{URL: "u2", Language: "pt", Label: "Português"},
 	}

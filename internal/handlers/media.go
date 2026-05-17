@@ -55,7 +55,7 @@ func (mh *MediaHandler) SearchMedia(query string, contentType models.MediaType) 
 		if err != nil {
 			return nil, err
 		}
-		return scraper.ConvertFlixHQToAnime(media), nil
+		return scraper.ConvertSFlixToAnime(media), nil
 	default:
 		return mh.mediaManager.SearchAll(query)
 	}
@@ -114,8 +114,8 @@ func (mh *MediaHandler) SelectMedia(results []*models.Anime) (*models.Anime, err
 }
 
 // SelectSeason prompts user to select a TV season
-func (mh *MediaHandler) SelectSeason(mediaID string) (*scraper.FlixHQSeason, error) {
-	seasons, err := mh.mediaManager.GetTVSeasons(mediaID)
+func (mh *MediaHandler) SelectSeason(mediaID string) (*scraper.SFlixSeason, error) {
+	seasons, err := mh.mediaManager.GetSFlixTVSeasons(mediaID)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +135,8 @@ func (mh *MediaHandler) SelectSeason(mediaID string) (*scraper.FlixHQSeason, err
 }
 
 // SelectEpisode prompts user to select a TV episode
-func (mh *MediaHandler) SelectEpisode(seasonID string) (*scraper.FlixHQEpisode, error) {
-	episodes, err := mh.mediaManager.GetTVEpisodes(seasonID)
+func (mh *MediaHandler) SelectEpisode(seasonID string) (*scraper.SFlixEpisode, error) {
+	episodes, err := mh.mediaManager.GetSFlixTVEpisodes(seasonID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,69 +156,32 @@ func (mh *MediaHandler) SelectEpisode(seasonID string) (*scraper.FlixHQEpisode, 
 }
 
 // GetStreamInfo gets streaming information for selected media
-func (mh *MediaHandler) GetStreamInfo(media *models.Anime, episode *scraper.FlixHQEpisode) (*scraper.FlixHQStreamInfo, error) {
+func (mh *MediaHandler) GetStreamInfo(media *models.Anime, episode *scraper.SFlixEpisode) (*scraper.SFlixStreamInfo, error) {
 	return mh.GetStreamInfoWithContext(context.Background(), media, episode)
 }
 
 // GetStreamInfoWithContext gets streaming information with context support
-func (mh *MediaHandler) GetStreamInfoWithContext(ctx context.Context, media *models.Anime, episode *scraper.FlixHQEpisode) (*scraper.FlixHQStreamInfo, error) {
+func (mh *MediaHandler) GetStreamInfoWithContext(ctx context.Context, media *models.Anime, episode *scraper.SFlixEpisode) (*scraper.SFlixStreamInfo, error) {
 	source := strings.ToLower(media.Source)
 
-	if !strings.Contains(source, "flixhq") {
-		return nil, fmt.Errorf("media source %s does not support FlixHQ streaming", media.Source)
+	if !strings.Contains(source, "sflix") {
+		return nil, fmt.Errorf("media source %s does not support SFlix streaming", media.Source)
 	}
 
-	// Extract media ID from URL
 	mediaID := extractIDFromURL(media.URL)
 	if mediaID == "" {
 		return nil, fmt.Errorf("could not extract media ID from URL: %s", media.URL)
 	}
 
 	if media.MediaType == models.MediaTypeMovie {
-		return mh.mediaManager.GetMovieStreamInfo(mediaID, mh.provider, string(mh.quality), mh.subsLanguage)
+		return mh.mediaManager.GetSFlixMovieStreamInfo(mediaID, mh.provider, string(mh.quality), mh.subsLanguage)
 	}
 
 	if episode == nil {
 		return nil, fmt.Errorf("episode is required for TV shows")
 	}
 
-	return mh.mediaManager.GetTVEpisodeStreamInfo(episode.DataID, mh.provider, string(mh.quality), mh.subsLanguage)
-}
-
-// GetStreamWithQuality gets stream info with quality selection
-func (mh *MediaHandler) GetStreamWithQuality(episodeID string, isMovie bool) (*scraper.FlixHQStreamInfo, error) {
-	return mh.mediaManager.GetStreamWithQuality(episodeID, isMovie, mh.quality, mh.subsLanguage)
-}
-
-// GetStreamWithQualityContext gets stream info with quality selection and context
-func (mh *MediaHandler) GetStreamWithQualityContext(ctx context.Context, episodeID string, isMovie bool) (*scraper.FlixHQStreamInfo, error) {
-	return mh.mediaManager.GetStreamWithQualityWithContext(ctx, episodeID, isMovie, mh.quality, mh.subsLanguage)
-}
-
-// SelectQuality prompts user to select video quality
-func (mh *MediaHandler) SelectQuality(episodeID string, isMovie bool) (scraper.Quality, error) {
-	qualities, err := mh.mediaManager.GetAvailableQualities(episodeID, isMovie)
-	if err != nil {
-		return scraper.QualityAuto, err
-	}
-
-	if len(qualities) == 0 {
-		return scraper.QualityAuto, nil
-	}
-
-	idx, err := tui.Find(qualities, func(i int) string {
-		return string(qualities[i])
-	}, fuzzyfinder.WithPromptString("Select quality: "))
-	if err != nil {
-		return scraper.QualityAuto, err
-	}
-
-	return qualities[idx], nil
-}
-
-// GetAvailableQualities returns available video qualities
-func (mh *MediaHandler) GetAvailableQualities(episodeID string, isMovie bool) ([]scraper.Quality, error) {
-	return mh.mediaManager.GetAvailableQualities(episodeID, isMovie)
+	return mh.mediaManager.GetSFlixTVEpisodeStreamInfo(episode.DataID, mh.provider, string(mh.quality), mh.subsLanguage)
 }
 
 // GetAnimeStreamURL gets stream URL for anime content
@@ -238,7 +201,6 @@ func (mh *MediaHandler) InteractiveMediaFlow(query string) (*PlaybackInfo, error
 		}
 	}
 
-	// Get search query if not provided
 	if query == "" {
 		var searchQuery string
 		prompt := huh.NewInput().
@@ -250,7 +212,6 @@ func (mh *MediaHandler) InteractiveMediaFlow(query string) (*PlaybackInfo, error
 		query = searchQuery
 	}
 
-	// Search for media
 	results, err := mh.SearchMedia(query, contentType)
 	if err != nil {
 		return nil, err
@@ -258,7 +219,6 @@ func (mh *MediaHandler) InteractiveMediaFlow(query string) (*PlaybackInfo, error
 
 	util.Debug("Search results", "count", len(results))
 
-	// Select media
 	selected, err := mh.SelectMedia(results)
 	if err != nil {
 		return nil, err
@@ -271,45 +231,18 @@ func (mh *MediaHandler) InteractiveMediaFlow(query string) (*PlaybackInfo, error
 		ImageURL:  selected.ImageURL,
 	}
 
-	// Handle based on media type and source
-	if strings.Contains(strings.ToLower(selected.Source), "flixhq") {
-		return mh.handleFlixHQPlayback(selected, playbackInfo)
+	if strings.Contains(strings.ToLower(selected.Source), "sflix") {
+		return mh.handleSFlixPlayback(selected, playbackInfo)
 	}
 
-	// Handle anime sources
 	return mh.handleAnimePlayback(selected, playbackInfo)
 }
 
-func (mh *MediaHandler) handleFlixHQPlayback(media *models.Anime, info *PlaybackInfo) (*PlaybackInfo, error) {
+func (mh *MediaHandler) handleSFlixPlayback(media *models.Anime, info *PlaybackInfo) (*PlaybackInfo, error) {
 	mediaID := extractIDFromURL(media.URL)
 
 	if media.MediaType == models.MediaTypeMovie {
-		// Get available qualities for the movie
-		qualities, err := mh.mediaManager.GetMovieQualities(mediaID)
-		if err != nil {
-			util.Debug("Could not fetch movie qualities", "error", err)
-			// Fall back to default quality
-			streamInfo, err := mh.mediaManager.GetMovieStreamInfo(mediaID, mh.provider, string(mh.quality), mh.subsLanguage)
-			if err != nil {
-				return nil, err
-			}
-			info.StreamURL = streamInfo.VideoURL
-			info.Subtitles = convertSubtitles(streamInfo.Subtitles)
-			return info, nil
-		}
-
-		// If qualities are available, let user select
-		if len(qualities) > 0 {
-			selectedQuality, err := mh.selectMovieQuality(qualities)
-			if err != nil {
-				util.Debug("Quality selection cancelled, using default", "error", err)
-				// Keep mh.quality as default
-			} else {
-				mh.quality = selectedQuality
-			}
-		}
-
-		streamInfo, err := mh.mediaManager.GetMovieStreamWithQuality(mediaID, mh.quality, mh.subsLanguage)
+		streamInfo, err := mh.mediaManager.GetSFlixMovieStreamInfo(mediaID, mh.provider, string(mh.quality), mh.subsLanguage)
 		if err != nil {
 			return nil, err
 		}
@@ -333,16 +266,7 @@ func (mh *MediaHandler) handleFlixHQPlayback(media *models.Anime, info *Playback
 	info.Episode = episode.Title
 	info.EpisodeNum = episode.Number
 
-	// Get available qualities for the episode
-	qualities, err := mh.mediaManager.GetEpisodeQualities(episode.DataID)
-	if err == nil && len(qualities) > 0 {
-		selectedQuality, err := mh.selectMovieQuality(qualities)
-		if err == nil {
-			mh.quality = selectedQuality
-		}
-	}
-
-	streamInfo, err := mh.mediaManager.GetTVEpisodeStreamInfo(episode.DataID, mh.provider, string(mh.quality), mh.subsLanguage)
+	streamInfo, err := mh.mediaManager.GetSFlixTVEpisodeStreamInfo(episode.DataID, mh.provider, string(mh.quality), mh.subsLanguage)
 	if err != nil {
 		return nil, err
 	}
@@ -353,24 +277,7 @@ func (mh *MediaHandler) handleFlixHQPlayback(media *models.Anime, info *Playback
 	return info, nil
 }
 
-// selectMovieQuality prompts user to select video quality from available options
-func (mh *MediaHandler) selectMovieQuality(qualities []scraper.QualityOption) (scraper.Quality, error) {
-	if len(qualities) == 0 {
-		return mh.quality, nil
-	}
-
-	idx, err := tui.Find(qualities, func(i int) string {
-		return qualities[i].Label
-	}, fuzzyfinder.WithPromptString("Select video quality: "))
-	if err != nil {
-		return mh.quality, err
-	}
-
-	return qualities[idx].Quality, nil
-}
-
 func (mh *MediaHandler) handleAnimePlayback(anime *models.Anime, info *PlaybackInfo) (*PlaybackInfo, error) {
-	// For anime, we need to select an episode
 	var episodeNum string
 	prompt := huh.NewInput().
 		Title("Episode number").
@@ -441,13 +348,13 @@ func extractIDFromURL(urlStr string) string {
 	return ""
 }
 
-func convertSubtitles(flixSubs []scraper.FlixHQSubtitle) []models.Subtitle {
+func convertSubtitles(subsIn []scraper.SFlixSubtitle) []models.Subtitle {
 	var subs []models.Subtitle
-	for _, fs := range flixSubs {
+	for _, s := range subsIn {
 		subs = append(subs, models.Subtitle{
-			URL:      fs.URL,
-			Language: fs.Language,
-			Label:    fs.Label,
+			URL:      s.URL,
+			Language: s.Language,
+			Label:    s.Label,
 		})
 	}
 	return subs

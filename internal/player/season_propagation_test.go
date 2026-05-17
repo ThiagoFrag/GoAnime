@@ -122,7 +122,7 @@ func TestCurrentSeasonOnMedia(t *testing.T) {
 		anime := &models.Anime{
 			Name:      "Dexter",
 			MediaType: models.MediaTypeTV,
-			Source:    "FlixHQ",
+			Source:    "SFlix",
 		}
 
 		// Simulate what GetFlixHQEpisodes now does after the fix:
@@ -131,7 +131,7 @@ func TestCurrentSeasonOnMedia(t *testing.T) {
 
 		assert.Equal(t, 2, anime.CurrentSeason)
 		assert.Equal(t, "Dexter", anime.Name)
-		assert.Equal(t, "FlixHQ", anime.Source)
+		assert.Equal(t, "SFlix", anime.Source)
 		assert.True(t, anime.IsTV())
 	})
 
@@ -158,10 +158,10 @@ func TestHandleDownloadAndPlay_SeasonFromAnime(t *testing.T) {
 		anime := &models.Anime{
 			Name:          "Dexter",
 			MediaType:     models.MediaTypeTV,
-			Source:        "FlixHQ",
+			Source:        "SFlix",
 			CurrentSeason: 2,
 		}
-		assert.Equal(t, "FlixHQ", anime.Source)
+		assert.Equal(t, "SFlix", anime.Source)
 
 		// Simulate the fixed HandleDownloadAndPlay logic:
 		// season := animeSeason (from anime.CurrentSeason)
@@ -283,7 +283,7 @@ func TestFlixHQEpisodesSetCurrentSeason(t *testing.T) {
 		media := &models.Anime{
 			Name:      "Dexter",
 			MediaType: models.MediaTypeTV,
-			Source:    "FlixHQ",
+			Source:    "SFlix",
 		}
 
 		// Simulate user selecting season index 1 (Season 2)
@@ -295,7 +295,7 @@ func TestFlixHQEpisodesSetCurrentSeason(t *testing.T) {
 
 		assert.Equal(t, 2, media.CurrentSeason)
 		assert.Equal(t, "Dexter", media.Name)
-		assert.Equal(t, "FlixHQ", media.Source)
+		assert.Equal(t, "SFlix", media.Source)
 		assert.True(t, media.IsTV())
 		assert.Equal(t, "Season 2", selectedSeason.Title)
 		assert.Equal(t, "season-2", selectedSeason.ID)
@@ -315,7 +315,7 @@ func TestFlixHQEpisodesSetCurrentSeason(t *testing.T) {
 		media := &models.Anime{
 			Name:      "Breaking Bad",
 			MediaType: models.MediaTypeTV,
-			Source:    "FlixHQ",
+			Source:    "SFlix",
 		}
 
 		selectedSeason := seasons[0]
@@ -323,7 +323,7 @@ func TestFlixHQEpisodesSetCurrentSeason(t *testing.T) {
 
 		assert.Equal(t, 1, media.CurrentSeason)
 		assert.Equal(t, "Breaking Bad", media.Name)
-		assert.Equal(t, "FlixHQ", media.Source)
+		assert.Equal(t, "SFlix", media.Source)
 		assert.True(t, media.IsTV())
 	})
 }
@@ -341,10 +341,10 @@ func TestEndToEndSeasonPipeline(t *testing.T) {
 		Name:      "Dexter",
 		URL:       "tv/watch-dexter-39392",
 		MediaType: models.MediaTypeTV,
-		Source:    "FlixHQ",
+		Source:    "SFlix",
 	}
 	assert.Equal(t, "tv/watch-dexter-39392", anime.URL)
-	assert.Equal(t, "FlixHQ", anime.Source)
+	assert.Equal(t, "SFlix", anime.Source)
 
 	// Step 2: GetFlixHQEpisodes runs, user selects Season 2
 	// (simulating media.CurrentSeason = selectedSeason.Number)

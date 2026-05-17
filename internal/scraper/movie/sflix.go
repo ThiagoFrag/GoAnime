@@ -20,6 +20,27 @@ type (
 	SFlixSubtitle      = scraper.SFlixSubtitle
 	SFlixVideoSources  = scraper.SFlixVideoSources
 	SFlixSource        = scraper.SFlixSource
+
+	MediaType  = scraper.MediaType
+	Quality    = scraper.Quality
+	ServerName = scraper.ServerName
+	StreamType = scraper.StreamType
+)
+
+// Re-export shared enum constants.
+const (
+	MediaTypeMovie = scraper.MediaTypeMovie
+	MediaTypeTV    = scraper.MediaTypeTV
+
+	QualityAuto = scraper.QualityAuto
+	Quality360  = scraper.Quality360
+	Quality480  = scraper.Quality480
+	Quality720  = scraper.Quality720
+	Quality1080 = scraper.Quality1080
+	QualityBest = scraper.QualityBest
+
+	StreamTypeHLS = scraper.StreamTypeHLS
+	StreamTypeMP4 = scraper.StreamTypeMP4
 )
 
 // SFlixMovieClient wraps the main SFlix client for movie-specific operations

@@ -120,18 +120,8 @@ func (md *MovieDownloader) DownloadMovie(media *models.Anime) error {
 		return md.promptPlayExisting(moviePath, media.Name)
 	}
 
-	// Get stream URL based on source
-	var streamInfo *scraper.FlixHQStreamInfo
-	var err error
-
-	source := strings.ToLower(media.Source)
-	if strings.Contains(source, "sflix") {
-		streamInfo, err = md.getSFlixMovieStream(mediaID)
-	} else {
-		// Default to FlixHQ
-		streamInfo, err = md.getFlixHQMovieStream(mediaID)
-	}
-
+	// Get stream URL from SFlix.
+	streamInfo, err := md.getSFlixMovieStream(mediaID)
 	if err != nil {
 		return fmt.Errorf("failed to get stream URL: %w", err)
 	}
@@ -143,7 +133,6 @@ func (md *MovieDownloader) DownloadMovie(media *models.Anime) error {
 	util.Infof("Got stream URL: %s", streamInfo.VideoURL)
 	util.Debugf("Quality: %s, Stream Type: %s, Referer: %s", streamInfo.Quality, streamInfo.StreamType, streamInfo.Referer)
 
-	// Download with progress, passing referer for authentication
 	return md.downloadMovieWithProgress(streamInfo.VideoURL, moviePath, media.Name, streamInfo.IsM3U8, streamInfo.Referer, streamInfo.Headers)
 }
 
@@ -186,17 +175,7 @@ func (md *MovieDownloader) DownloadTVEpisode(media *models.Anime, seasonNum, epi
 		return md.promptPlayExisting(episodePath, fmt.Sprintf("%s S%02dE%02d", media.Name, seasonNum, episodeNum))
 	}
 
-	// Get seasons and find the right episode
-	source := strings.ToLower(media.Source)
-	var streamInfo *scraper.FlixHQStreamInfo
-	var err error
-
-	if strings.Contains(source, "sflix") {
-		streamInfo, err = md.getSFlixEpisodeStream(mediaID, seasonNum, episodeNum)
-	} else {
-		streamInfo, err = md.getFlixHQEpisodeStream(mediaID, seasonNum, episodeNum)
-	}
-
+	streamInfo, err := md.getSFlixEpisodeStream(mediaID, seasonNum, episodeNum)
 	if err != nil {
 		return fmt.Errorf("failed to get stream URL: %w", err)
 	}
@@ -251,9 +230,6 @@ func (md *MovieDownloader) DownloadAllSeasons(media *models.Anime) error {
 		return fmt.Errorf("could not extract media ID from URL: %s", media.URL)
 	}
 
-	source := strings.ToLower(media.Source)
-	isSFlix := strings.Contains(source, "sflix")
-
 	// Build metadata once for path operations
 	meta := &util.MediaMeta{
 		OfficialTitle: media.OfficialTitle(),
@@ -271,22 +247,12 @@ func (md *MovieDownloader) DownloadAllSeasons(media *models.Anime) error {
 	}
 	var seasons []seasonInfo
 
-	if isSFlix {
-		sflixSeasons, err := md.mediaManager.GetSFlixTVSeasons(mediaID)
-		if err != nil {
-			return fmt.Errorf("failed to get seasons: %w", err)
-		}
-		for i, s := range sflixSeasons {
-			seasons = append(seasons, seasonInfo{id: s.ID, number: i + 1})
-		}
-	} else {
-		flixSeasons, err := md.mediaManager.GetTVSeasons(mediaID)
-		if err != nil {
-			return fmt.Errorf("failed to get seasons: %w", err)
-		}
-		for i, s := range flixSeasons {
-			seasons = append(seasons, seasonInfo{id: s.ID, number: i + 1})
-		}
+	sflixSeasons, err := md.mediaManager.GetSFlixTVSeasons(mediaID)
+	if err != nil {
+		return fmt.Errorf("failed to get seasons: %w", err)
+	}
+	for i, s := range sflixSeasons {
+		seasons = append(seasons, seasonInfo{id: s.ID, number: i + 1})
 	}
 
 	if len(seasons) == 0 {
@@ -300,25 +266,13 @@ func (md *MovieDownloader) DownloadAllSeasons(media *models.Anime) error {
 	var downloadErrors []error
 
 	for _, s := range seasons {
-		// Get episode count for this season
-		var episodeCount int
-		if isSFlix {
-			episodes, err := md.mediaManager.GetSFlixTVEpisodes(s.id)
-			if err != nil {
-				util.Warnf("Failed to get episodes for season %d: %v", s.number, err)
-				downloadErrors = append(downloadErrors, fmt.Errorf("season %d episodes: %w", s.number, err))
-				continue
-			}
-			episodeCount = len(episodes)
-		} else {
-			episodes, err := md.mediaManager.GetTVEpisodes(s.id)
-			if err != nil {
-				util.Warnf("Failed to get episodes for season %d: %v", s.number, err)
-				downloadErrors = append(downloadErrors, fmt.Errorf("season %d episodes: %w", s.number, err))
-				continue
-			}
-			episodeCount = len(episodes)
+		episodes, err := md.mediaManager.GetSFlixTVEpisodes(s.id)
+		if err != nil {
+			util.Warnf("Failed to get episodes for season %d: %v", s.number, err)
+			downloadErrors = append(downloadErrors, fmt.Errorf("season %d episodes: %w", s.number, err))
+			continue
 		}
+		episodeCount := len(episodes)
 
 		if episodeCount == 0 {
 			util.Warnf("Season %d has no episodes, skipping", s.number)
@@ -356,55 +310,13 @@ func (md *MovieDownloader) DownloadAllSeasons(media *models.Anime) error {
 	return nil
 }
 
-// getFlixHQMovieStream gets stream info for a FlixHQ movie
-func (md *MovieDownloader) getFlixHQMovieStream(mediaID string) (*scraper.FlixHQStreamInfo, error) {
-	return md.mediaManager.GetMovieStreamWithQuality(mediaID, md.config.Quality, md.config.SubsLanguage)
-}
-
 // getSFlixMovieStream gets stream info for a SFlix movie
-func (md *MovieDownloader) getSFlixMovieStream(mediaID string) (*scraper.FlixHQStreamInfo, error) {
-	sflixInfo, err := md.mediaManager.GetSFlixMovieStreamInfo(mediaID, md.config.Provider, string(md.config.Quality), md.config.SubsLanguage)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert SFlixStreamInfo to FlixHQStreamInfo for unified handling
-	return convertSFlixToFlixHQStreamInfo(sflixInfo), nil
-}
-
-// getFlixHQEpisodeStream gets stream info for a FlixHQ TV episode
-func (md *MovieDownloader) getFlixHQEpisodeStream(mediaID string, seasonNum, episodeNum int) (*scraper.FlixHQStreamInfo, error) {
-	// Get seasons
-	seasons, err := md.mediaManager.GetTVSeasons(mediaID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get seasons: %w", err)
-	}
-
-	if seasonNum > len(seasons) {
-		return nil, fmt.Errorf("season %d not found (only %d seasons available)", seasonNum, len(seasons))
-	}
-
-	season := seasons[seasonNum-1]
-
-	// Get episodes for the season
-	episodes, err := md.mediaManager.GetTVEpisodes(season.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get episodes: %w", err)
-	}
-
-	if episodeNum > len(episodes) {
-		return nil, fmt.Errorf("episode %d not found in season %d (only %d episodes available)", episodeNum, seasonNum, len(episodes))
-	}
-
-	episode := episodes[episodeNum-1]
-
-	// Get stream info
-	return md.mediaManager.GetTVEpisodeStreamInfo(episode.DataID, md.config.Provider, string(md.config.Quality), md.config.SubsLanguage)
+func (md *MovieDownloader) getSFlixMovieStream(mediaID string) (*scraper.SFlixStreamInfo, error) {
+	return md.mediaManager.GetSFlixMovieStreamInfo(mediaID, md.config.Provider, string(md.config.Quality), md.config.SubsLanguage)
 }
 
 // getSFlixEpisodeStream gets stream info for a SFlix TV episode
-func (md *MovieDownloader) getSFlixEpisodeStream(mediaID string, seasonNum, episodeNum int) (*scraper.FlixHQStreamInfo, error) {
-	// Get seasons
+func (md *MovieDownloader) getSFlixEpisodeStream(mediaID string, seasonNum, episodeNum int) (*scraper.SFlixStreamInfo, error) {
 	seasons, err := md.mediaManager.GetSFlixTVSeasons(mediaID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get seasons: %w", err)
@@ -416,7 +328,6 @@ func (md *MovieDownloader) getSFlixEpisodeStream(mediaID string, seasonNum, epis
 
 	season := seasons[seasonNum-1]
 
-	// Get episodes for the season
 	episodes, err := md.mediaManager.GetSFlixTVEpisodes(season.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get episodes: %w", err)
@@ -428,13 +339,7 @@ func (md *MovieDownloader) getSFlixEpisodeStream(mediaID string, seasonNum, epis
 
 	episode := episodes[episodeNum-1]
 
-	// Get stream info
-	sflixInfo, err := md.mediaManager.GetSFlixTVEpisodeStreamInfo(episode.DataID, md.config.Provider, string(md.config.Quality), md.config.SubsLanguage)
-	if err != nil {
-		return nil, err
-	}
-
-	return convertSFlixToFlixHQStreamInfo(sflixInfo), nil
+	return md.mediaManager.GetSFlixTVEpisodeStreamInfo(episode.DataID, md.config.Provider, string(md.config.Quality), md.config.SubsLanguage)
 }
 
 // downloadMovieWithProgress downloads a movie/episode with Bubble Tea progress bar
@@ -1018,34 +923,6 @@ func extractMediaIDFromURL(urlStr string) string {
 		return parts[len(parts)-1]
 	}
 	return ""
-}
-
-func convertSFlixToFlixHQStreamInfo(sflix *scraper.SFlixStreamInfo) *scraper.FlixHQStreamInfo {
-	if sflix == nil {
-		return nil
-	}
-
-	var subtitles []scraper.FlixHQSubtitle
-	for _, sub := range sflix.Subtitles {
-		subtitles = append(subtitles, scraper.FlixHQSubtitle(sub))
-	}
-
-	var qualities []scraper.FlixHQQualityOption
-	for _, q := range sflix.Qualities {
-		qualities = append(qualities, scraper.FlixHQQualityOption(q))
-	}
-
-	return &scraper.FlixHQStreamInfo{
-		VideoURL:   sflix.VideoURL,
-		Quality:    sflix.Quality,
-		Subtitles:  subtitles,
-		Referer:    sflix.Referer,
-		SourceName: sflix.SourceName,
-		StreamType: sflix.StreamType,
-		IsM3U8:     sflix.IsM3U8,
-		Headers:    sflix.Headers,
-		Qualities:  qualities,
-	}
 }
 
 // Movie progress model for Bubble Tea (separate from anime progress model)

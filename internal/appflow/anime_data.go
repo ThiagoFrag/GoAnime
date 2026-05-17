@@ -110,7 +110,7 @@ func FetchAnimeDetails(anime *models.Anime) {
 			Type(spinner.Dots).
 			Action(func() {
 				// For FlixHQ/SuperFlix movies/TV shows, use TMDB enrichment instead of AniList
-				if anime.Source == "FlixHQ" || anime.Source == "SuperFlix" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
+				if anime.Source == "SFlix" || anime.Source == "SuperFlix" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
 					util.Debugf("Skipping AniList enrichment for movie/TV content: %s (source: %s)", anime.Name, anime.Source)
 					// SuperFlix stores TMDB ID in URL, not a web page URL, so skip the old page scraping
 					if anime.Source != "SuperFlix" {
@@ -193,7 +193,7 @@ func GetAnimeEpisodes(anime *models.Anime) ([]models.Episode, error) {
 
 	// For FlixHQ content, don't wrap in spinner here because GetFlixHQEpisodes
 	// has UI interactions (season selection) and handles its own spinners for network calls
-	if anime.Source == "FlixHQ" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
+	if anime.Source == "SFlix" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
 		episodes, fetchErr = api.GetAnimeEpisodesEnhanced(anime)
 	} else {
 		// Use spinner while fetching episodes for non-FlixHQ content

@@ -107,10 +107,10 @@ func SearchAnimeEnhanced(name string, source string) (*models.Anime, error) {
 		t := scraper.AnimeDriveType
 		scraperType = &t
 		util.Debug("Searching specific source", "source", "AnimeDrive")
-	case "flixhq", "movie", "tv":
-		t := scraper.FlixHQType
+	case "sflix", "movie", "tv":
+		t := scraper.SFlixType
 		scraperType = &t
-		util.Debug("Searching specific source", "source", "FlixHQ")
+		util.Debug("Searching specific source", "source", "SFlix")
 	case "9anime", "nineanime":
 		t := scraper.NineAnimeType
 		scraperType = &t
@@ -164,8 +164,8 @@ func SearchAnimeEnhanced(name string, source string) (*models.Anime, error) {
 				anime.Source = "AnimeDrive"
 			case strings.Contains(anime.URL, "goyabu"):
 				anime.Source = "Goyabu"
-			case strings.Contains(anime.URL, "flixhq"):
-				anime.Source = "FlixHQ"
+			case strings.Contains(anime.URL, "sflix"):
+				anime.Source = "SFlix"
 			}
 			// Note: 9Anime uses numeric IDs which can't be identified by URL alone;
 			// the Source field is already set by the scraper
@@ -181,7 +181,7 @@ func SearchAnimeEnhanced(name string, source string) (*models.Anime, error) {
 		"AnimeFire", breakdown.AnimeFire,
 		"AllAnime", breakdown.AllAnime,
 		"AnimeDrive", breakdown.AnimeDrive,
-		"FlixHQ", breakdown.FlixHQ,
+		"SFlix", breakdown.SFlix,
 		"9Anime", breakdown.NineAnime,
 		"SuperFlix", breakdown.SuperFlix,
 		"Goyabu", breakdown.Goyabu,
@@ -282,9 +282,9 @@ func GetAnimeEpisodesEnhanced(anime *models.Anime) ([]models.Episode, error) {
 		return GetSuperFlixEpisodes(anime)
 	}
 
-	// Check if this is a FlixHQ movie/TV show
-	if anime.Source == "FlixHQ" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
-		return GetFlixHQEpisodes(anime)
+	// Check if this is an SFlix movie/TV show
+	if anime.Source == "SFlix" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
+		return GetSFlixEpisodes(anime)
 	}
 
 	// Check if this is a 9Anime source
@@ -429,9 +429,9 @@ func GetEpisodeStreamURL(episode *models.Episode, anime *models.Anime, quality s
 		return GetSuperFlixStreamURL(anime, episode, quality)
 	}
 
-	// Check if this is FlixHQ content
-	if anime.Source == "FlixHQ" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
-		streamURL, subtitles, err := GetFlixHQStreamURL(anime, episode, quality)
+	// Check if this is SFlix content
+	if anime.Source == "SFlix" || anime.MediaType == models.MediaTypeMovie || anime.MediaType == models.MediaTypeTV {
+		streamURL, subtitles, err := GetSFlixStreamURL(anime, episode, quality)
 		if err != nil {
 			return "", err
 		}
@@ -777,13 +777,13 @@ func GetNineAnimeStreamURL(anime *models.Anime, episode *models.Episode, quality
 	*/
 }
 
-// GetFlixHQEpisodes handles episodes/content for FlixHQ movies and TV shows
+// GetSFlixEpisodes handles episodes/content for SFlix movies and TV shows
 //
-// TEMP-DISABLED: FlixHQ source is temporarily disabled until a fix lands.
+// TEMP-DISABLED: SFlix source is temporarily disabled until a fix lands.
 // The original body is preserved below in a commented block.
-func GetFlixHQEpisodes(media *models.Anime) ([]models.Episode, error) {
+func GetSFlixEpisodes(media *models.Anime) ([]models.Episode, error) {
 	_ = media
-	return nil, fmt.Errorf("FlixHQ source is temporarily disabled")
+	return nil, fmt.Errorf("SFlix source is temporarily disabled")
 
 	/*
 			flixhqClient := scraper.NewFlixHQClient()
@@ -877,13 +877,13 @@ func GetFlixHQEpisodes(media *models.Anime) ([]models.Episode, error) {
 	*/
 }
 
-// GetFlixHQStreamURL gets the stream URL for FlixHQ content
+// GetSFlixStreamURL gets the stream URL for SFlix content
 //
-// TEMP-DISABLED: FlixHQ source is temporarily disabled until a fix lands.
+// TEMP-DISABLED: SFlix source is temporarily disabled until a fix lands.
 // The original body is preserved below in a commented block.
-func GetFlixHQStreamURL(media *models.Anime, episode *models.Episode, quality string) (string, []models.Subtitle, error) {
+func GetSFlixStreamURL(media *models.Anime, episode *models.Episode, quality string) (string, []models.Subtitle, error) {
 	_, _, _ = media, episode, quality
-	return "", nil, fmt.Errorf("FlixHQ source is temporarily disabled")
+	return "", nil, fmt.Errorf("SFlix source is temporarily disabled")
 
 	/*
 			flixhqClient := scraper.NewFlixHQClient()
@@ -1227,7 +1227,7 @@ type sourceBreakdown struct {
 	AnimeFire  int
 	AllAnime   int
 	AnimeDrive int
-	FlixHQ     int
+	SFlix      int
 	NineAnime  int
 	SuperFlix  int
 	Goyabu     int
@@ -1250,8 +1250,8 @@ func countSourceBreakdown(animes []*models.Anime) sourceBreakdown {
 			b.AllAnime++
 		case anime.Source == "AnimeDrive":
 			b.AnimeDrive++
-		case anime.Source == "FlixHQ":
-			b.FlixHQ++
+		case anime.Source == "SFlix":
+			b.SFlix++
 		case anime.Source == "9Anime":
 			b.NineAnime++
 		case anime.Source == "SuperFlix":

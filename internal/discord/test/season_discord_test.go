@@ -13,7 +13,7 @@ func TestDiscordState_SeasonBug(t *testing.T) {
 		anime := &models.Anime{
 			Name:      "Dexter",
 			MediaType: models.MediaTypeTV,
-			Source:    "FlixHQ",
+			Source:    "SFlix",
 			Episodes:  []models.Episode{{Number: "5", Num: 5}},
 		}
 		assert.Equal(t, "Dexter", anime.Name)
@@ -39,7 +39,7 @@ func TestDiscordState_SeasonFix(t *testing.T) {
 			anime: &models.Anime{
 				Name:          "Dexter",
 				MediaType:     models.MediaTypeTV,
-				Source:        "FlixHQ",
+				Source:        "SFlix",
 				CurrentSeason: 2,
 			},
 			episodeNumber: "5",
@@ -50,7 +50,7 @@ func TestDiscordState_SeasonFix(t *testing.T) {
 			anime: &models.Anime{
 				Name:          "Breaking Bad",
 				MediaType:     models.MediaTypeTV,
-				Source:        "FlixHQ",
+				Source:        "SFlix",
 				CurrentSeason: 4,
 			},
 			episodeNumber: "11",
@@ -61,7 +61,7 @@ func TestDiscordState_SeasonFix(t *testing.T) {
 			anime: &models.Anime{
 				Name:          "Friends",
 				MediaType:     models.MediaTypeTV,
-				Source:        "FlixHQ",
+				Source:        "SFlix",
 				CurrentSeason: 1,
 			},
 			episodeNumber: "1",
@@ -72,7 +72,7 @@ func TestDiscordState_SeasonFix(t *testing.T) {
 			anime: &models.Anime{
 				Name:          "Some Show",
 				MediaType:     models.MediaTypeTV,
-				Source:        "FlixHQ",
+				Source:        "SFlix",
 				CurrentSeason: 0,
 			},
 			episodeNumber: "7",
@@ -83,7 +83,7 @@ func TestDiscordState_SeasonFix(t *testing.T) {
 			anime: &models.Anime{
 				Name:      "Inception",
 				MediaType: models.MediaTypeMovie,
-				Source:    "FlixHQ",
+				Source:    "SFlix",
 			},
 			episodeNumber: "1",
 			wantState:     "Watching a movie",
@@ -102,7 +102,7 @@ func TestDiscordState_SeasonFix(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			isMovieOrTV := tc.anime.IsMovieOrTV() || tc.anime.Source == "FlixHQ"
+			isMovieOrTV := tc.anime.IsMovieOrTV() || tc.anime.Source == "SFlix"
 
 			var state string
 			if isMovieOrTV {

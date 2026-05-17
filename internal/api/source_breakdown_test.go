@@ -68,7 +68,7 @@ func TestCountSourceBreakdown_AnimeFireCaseInsensitive(t *testing.T) {
 		{Source: "animefire"},
 		{Source: "AllAnime"},
 		{Source: "Goyabu"},
-		{Source: "FlixHQ"},
+		{Source: "SFlix"},
 		{Source: "9Anime"},
 		{Source: "SuperFlix"},
 		{Source: "AnimeDrive"},
@@ -79,7 +79,7 @@ func TestCountSourceBreakdown_AnimeFireCaseInsensitive(t *testing.T) {
 	assert.Equal(t, 5, got.AnimeFire, "all AnimeFire spellings must be counted")
 	assert.Equal(t, 1, got.AllAnime)
 	assert.Equal(t, 1, got.Goyabu)
-	assert.Equal(t, 1, got.FlixHQ)
+	assert.Equal(t, 1, got.SFlix)
 	assert.Equal(t, 1, got.NineAnime)
 	assert.Equal(t, 1, got.SuperFlix)
 	assert.Equal(t, 1, got.AnimeDrive)
@@ -106,7 +106,7 @@ func TestCountSourceBreakdown_RealisticPayload(t *testing.T) {
 	assert.Equal(t, 5, got.AllAnime)
 	assert.Equal(t, 8, got.Goyabu, "Goyabu must appear in the breakdown")
 	assert.Equal(t, 0, got.AnimeDrive)
-	assert.Equal(t, 0, got.FlixHQ)
+	assert.Equal(t, 0, got.SFlix)
 	assert.Equal(t, 0, got.NineAnime)
 	assert.Equal(t, 0, got.SuperFlix)
 }

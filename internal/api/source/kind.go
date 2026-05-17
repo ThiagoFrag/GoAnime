@@ -12,7 +12,6 @@ const (
 	AllAnime   SourceKind = "AllAnime"
 	AnimeFire  SourceKind = "AnimeFire"
 	AnimeDrive SourceKind = "AnimeDrive"
-	FlixHQ     SourceKind = "FlixHQ"
 	SFlix      SourceKind = "SFlix"
 	NineAnime  SourceKind = "9Anime"
 	Goyabu     SourceKind = "Goyabu"
@@ -34,7 +33,6 @@ var scraperTypeMap = map[SourceKind]scraper.ScraperType{
 	AllAnime:   scraper.AllAnimeType,
 	AnimeFire:  scraper.AnimefireType,
 	AnimeDrive: scraper.AnimeDriveType,
-	FlixHQ:     scraper.FlixHQType,
 	SFlix:      scraper.SFlixType,
 	NineAnime:  scraper.NineAnimeType,
 	Goyabu:     scraper.GoyabuType,
