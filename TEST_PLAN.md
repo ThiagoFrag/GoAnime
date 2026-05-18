@@ -1,8 +1,12 @@
 # GoAnime — Plano de Testes: 25.9% → 70%
 
-> **Data:** 2026-04-26 · **Cobertura real:** `25.9%` (go tool cover)  
-> **Alvo:** `70%` · **Gap:** `44.1 pontos percentuais`  
-> **Total de funções:** 1217 · **Funções a 0.0%:** 1033 · **Funções parcialmente cobertas:** 184
+> **Data inicial:** 2026-04-26 · **Estado atual (2026-05-18):** `52.8%` · **Alvo:** `70%` · **Gap restante:** `17.2 pontos percentuais`
+> **Total statements:** 12065 · **Missed:** 5692 · **A cobrir para 70%:** +2073 statements
+> **Funções a 0%:** 165 (contagem exata via `awk '$NF == "0.0%"'`)
+
+> **Histórico:**
+> - Sprint inicial (2026-04-26 → 2026-05-17): FASES 1–14, alcançou **52.8%**, ~983 funções testadas
+> - Push 70% (2026-05-18 → em planejamento): FASES 15–17, alvo +2100 statements, +165 funções → ≤ 30 funcs 0%
 
 ---
 
@@ -677,10 +681,96 @@ go test ./internal/scraper/ -bench=. -benchmem
 
 ## 8. Métricas Alvo
 
-| Métrica | Atual | Sprint 1 | Sprint 2 | Sprint 3 | Sprint 4 |
+### Histórico (Sprint Inicial: FASES 1–14)
+
+| Métrica | 2026-04-26 | Sprint 1 | Sprint 2 | Sprint 3 | Sprint 4 |
 |---|---|---|---|---|---|
-| Cobertura | 25.9% | ~35% | ~52% | ~62% | **~70%** |
+| Cobertura | 25.9% | ~35% | ~52% | ~62% | **~70%** (estimado) |
 | Funções 0% | 1033 | ~936 | ~666 | ~533 | **~248** |
 | Testes novos | 0 | +34 | +65 | +29 | +55 |
 | Total acumulado | 0 | 34 | 99 | 128 | **183** |
 | Pacotes 0% | 5 | 3 | 2 | 1 | **0** |
+
+### Real Alcançado (2026-05-18)
+
+| Métrica | Pós-FASE 14 |
+|---|---|
+| Cobertura total | **52.8%** |
+| Statements totais | 12065 |
+| Statements missed | 5692 |
+| Pacotes a 0% | 0 (todos os pacotes do production têm pelo menos 5% cobertura) |
+| Funções/testes criadas | ~983 ao longo de FASES 1–14 |
+
+**Conclusão:** sprint inicial subiu de 25.9% → 52.8% (+26.9pp) em 14 fases. As fases finais (13–14) tiveram diminishing returns porque cada nova função adicionada cobria poucos statements (helpers triviais, accessors).
+
+### Push 70% — Fases Adicionais Estritas (planejado 2026-05-18, corrigido para contagem real)
+
+**Regra reafirmada (CLAUDE.md REGRA #0):** 1 teste por função. **165 funções a 0%** (contagem exata) → cobrir todas exceto ~30 intratáveis.
+
+| Métrica | Pós-14 | Pós-15 | Pós-16 | Pós-17 |
+|---|---:|---:|---:|---:|
+| Cobertura % | 52.8 | ~58 | ~64 | **~70** |
+| Stmts cobertos | 6373 | ~6973 | ~7873 | **~8473** |
+| Funcs 0% | 165 | ~108 | ~53 | **≤ 30** |
+| Funcs novas testadas | — | +57 | +55 | +53 |
+| Refactors aceitos | — | 3 | 5–6 | 2–3 |
+
+**Total funções novas testadas:** +165 → +1148 totais somando FASES 1–17.
+
+**Importante:** A contagem inicial de "591 funcs 0%" estava errada — bug no `grep "0.0%"` que capturava também `100.0%`, `80.0%`, etc. Contagem correta via `awk '$NF == "0.0%"'` revela apenas 165 funcs realmente sem cobertura.
+
+### Refactors permitidos (autorizado 2026-05-18, "vale tudo")
+
+| Tipo | Exemplo | Quando |
+|---|---|---|
+| Var injetável | `var anilistBaseURL = "..."` | URL hardcoded |
+| Interface wrap | `type rpcClient interface { ... }` | Cliente global de SDK externo |
+| Split função | `Public()` chama `privateHelper(deps)` | Função orquestradora com TUI + rede |
+| `*ForTesting` | `func SetClientForTesting(c iface)` | Singleton inicializado em init() |
+| Dependency injection | `New*(opts ...Option)` | Construtores que liam env diretamente |
+
+**Restrição única:** API pública não quebra. Funções exportadas pré-FASE 14 mantêm assinatura.
+
+---
+
+## 9. Sequenciamento das Fases 15–17
+
+### Por que esta ordem?
+
+1. **FASE 15 (api + util):** Maior número de funcs 0% num só conjunto (57). Refactors leves (vars de URL injetáveis). ROI alto, baixo risco.
+2. **FASE 16 (playback + handlers + discord + upscaler + updater):** Refactors mais agressivos (interface wrap discord, splits de função orquestrada playback/handlers). Maior payoff de statements (+900 estimados) porque cobre paths longos antes destestados.
+3. **FASE 17 (scraper + providers + downloader + SDK + misc):** Limpeza final. Refactors mínimos. Cobre funcs restantes em pacotes já bem testados.
+
+### Critério de saída de cada fase
+
+- `go test ./<pacote>/ -count=1 -race` verde
+- Funcs 0% no pacote alvo caiu para meta (ver tabela FASE em TEST_STAGES.md)
+- Refactors documentados em comentário `// 2026-05-XX: extracted for testability (CLAUDE.md REGRA #0)`
+- Sem regressão: pacotes não-alvo mantêm cobertura ≥ valor anterior
+
+### Critério final FASE 17
+
+```bash
+go test ./... -short -coverprofile=coverage.out -covermode=atomic -race
+go tool cover -func=coverage.out | tail -1
+# Esperado: ≥ 70.0%
+go tool cover -func=coverage.out | awk '$NF == "0.0%"' | wc -l
+# Esperado: ≤ 30 (apenas main()/exemplos/loops TUI puros)
+```
+
+### Verificação contínua (em CADA fase)
+
+```bash
+# Antes da fase X — snapshot de funcs 0% no pacote
+go tool cover -func=cov_pre.out | awk '$NF == "0.0%" {print $1, $2}' | grep "internal/<pkg>" > pre.txt
+wc -l pre.txt
+
+# Após a fase X — comparar
+go tool cover -func=cov_post.out | awk '$NF == "0.0%" {print $1, $2}' | grep "internal/<pkg>" > post.txt
+wc -l post.txt
+
+# Funções ainda 0% (devem ser justificadas em comentário do PR ou listadas como exceção)
+diff pre.txt post.txt
+```
+
+**ATENÇÃO:** Use `awk '$NF == "0.0%"'`, NÃO `grep "0.0%"`. O grep também matches "100.0%", "80.0%", "70.0%", etc. → contagem inflada.

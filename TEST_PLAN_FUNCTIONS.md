@@ -1,1101 +1,373 @@
-# GoAnime — Apêndice: 1033 Funções Sem Cobertura (0.0%)
+# GoAnime — Mapeamento das 165 Funções a 0% (Push 70%)
 
-> **Projeto total:** 1217 funções · **Com cobertura:** 184 · **Sem cobertura:** 1033
-> **Gerado por:** `go tool cover -func=coverage.out` em 2026-04-26
+> **Estado em 2026-05-18 (pós-FASE 14):** 165 funções a 0% (de 12065 statements totais, 52.8% cobertura).
+> **Gerado por:** `go tool cover -func=coverage.out | awk '$NF == "0.0%"'`
+> **Regra absoluta (CLAUDE.md):** *cada* função desta lista recebe seu próprio `TestNomeDaFuncao_*`.
+>
+> Manifestos crus em `.test_manifests/p<N>_*.txt` (para grep/audit).
 
 ---
 
-#### `cmd/goanime/` — 1 funções
-**main.go:19** (1): `main`
+## Resumo por Fase
 
-#### `internal/api/` — 82 funções
-**allanime_enhanced.go:127** (1): `isAllAnimeSourceAPI`
-**allanime_enhanced.go:14** (1): `GetEpisodeStreamURLEnhanced`
-**allanime_enhanced.go:146** (1): `extractAllAnimeIDAPI`
-**allanime_enhanced.go:74** (1): `GetAllAnimeEpisodeURLDirect`
-**allanime_smart.go:154** (1): `writeAniSkipSidecar`
-**allanime_smart.go:194** (1): `WriteAniSkipSidecar`
-**allanime_smart.go:198** (1): `smartOutputDir`
-**allanime_smart.go:204** (1): `sanitizeSmart`
-**allanime_smart.go:21** (1): `DownloadAllAnimeSmartRange`
-**allanime_smart.go:216** (1): `sanitizeSmartDest`
-**allanime_smart.go:250** (1): `validateSmartRangeInputs`
-**allanime_smart.go:264** (1): `shouldUseYtDlp`
-**allanime_smart.go:275** (1): `isUnsafeExtensionError`
-**allanime_smart.go:286** (1): `smartDownloadDirect`
-**allanime_smart.go:319** (1): `alreadyDownloaded`
-**allanime_smart.go:327** (1): `resolveStreamURLForEpisode`
-**allanime_smart.go:81** (1): `smartDownload`
-**anime.go:116** (1): `SearchAnime`
-**anime.go:150** (1): `FetchAnimeData`
-**anime.go:186** (1): `getStringValue`
-**anime.go:191** (1): `getIntValue`
-**anime.go:203** (1): `getBoolValue`
-**anime.go:209** (1): `enrichAnimeData`
-**anime.go:239** (1): `searchAnimeOnPage`
-**anime.go:272** (1): `ParseAnimes`
-**anime.go:28** (1): `GetEpisodeData`
-**anime.go:288** (1): `FetchAnimeFromAniList`
-**anime.go:292** (1): `selectAnimeWithGoFuzzyFinder`
-**anime.go:322** (1): `httpGetWithUA`
-**anime.go:33** (1): `GetMovieData`
-**anime.go:343** (1): `httpPostFast`
-**anime.go:386** (1): `resolveURL`
-**anime.go:393** (1): `normalizeAccents`
-**anime.go:492** (1): `CleanTitle`
-**anime.go:590** (1): `safeClose`
-**anime.go:86** (1): `FetchAnimeDetails`
-**anime_url_title.go:100** (1): `toTitleCase`
-**anime_url_title.go:112** (1): `FetchAnimeFromAniListWithURL`
-**aniskip.go:16** (1): `GetAniSkipData`
-**aniskip.go:49** (1): `RoundTime`
-**aniskip.go:55** (1): `ParseAniSkipResponse`
-**aniskip.go:92** (1): `GetAndParseAniSkipData`
-**api.go:126** (1): `SafeTransport`
-**api.go:156** (1): `SafeGet`
-**api.go:169** (1): `ValidateExternalURL`
-**api.go:204** (1): `SafeDialContext`
-**api.go:25** (1): `IsDisallowedIP`
-**api.go:49** (1): `checkDisallowedIP`
-**api.go:89** (1): `dialFunc`
-**enhanced.go:1091** (1): `GetSuperFlixStreamURL`
-**enhanced.go:1156** (1): `languagePriority`
-**enhanced.go:263** (1): `GetAnimeEpisodesEnhanced`
-**enhanced.go:30** (1): `isStdoutTerminal`
-**enhanced.go:396** (1): `GetEpisodeStreamURL`
-**enhanced.go:42** (1): `runWithSpinner`
-**enhanced.go:558** (1): `DownloadEpisodeEnhanced`
-**enhanced.go:586** (1): `DownloadEpisodeRangeEnhanced`
-**enhanced.go:60** (1): `SearchAnimeEnhanced`
-**enhanced.go:619** (1): `sanitizeFilename`
-**enhanced.go:638** (1): `downloadFromURL`
-**enhanced.go:645** (1): `SearchAnimeWithSource`
-**enhanced.go:650** (1): `GetNineAnimeEpisodes`
-**enhanced.go:667** (1): `GetNineAnimeStreamURL`
-**enhanced.go:741** (1): `GetFlixHQEpisodes`
-**enhanced.go:830** (1): `GetFlixHQStreamURL`
-**enhanced.go:944** (1): `selectFlixHQQualityOptions`
-**enhanced.go:973** (1): `extractMediaIDFromURL`
-**enhanced.go:982** (1): `GetAnimeEpisodesWithSource`
-**enhanced.go:987** (1): `GetSuperFlixEpisodes`
-**episode_providers.go:163** (1): `Name`
-**episode_providers.go:24** (1): `Name`
-**episode_providers.go:367** (1): `getKitsuAnimeID`
-**episode_providers.go:414** (1): `populateEpisodeFromMap`
-**episode_providers.go:431** (1): `defaultProviders`
-**episode_providers.go:441** (1): `GetEpisodeDataWithFallback`
-**episode_providers.go:52** (1): `Name`
-**episodes.go:111** (1): `sortEpisodesByNum`
-**episodes.go:27** (1): `GetAnimeEpisodes`
-**episodes.go:64** (1): `parseEpisodes`
-**episodes.go:99** (1): `parseEpisodeNumber`
-**series.go:15** (1): `IsSeries`
-**series.go:28** (1): `IsSeriesEnhanced`
+| Fase | Funcs | Foco | Refactor? |
+|---|---:|---|:---:|
+| 15 | 57 | `internal/api/`, `internal/util/` — branches + error paths | sim — vars injetáveis |
+| 16 | 55 | `internal/playback/`, `internal/handlers/`, `internal/discord/`, `internal/upscaler/`, `internal/updater/` — TUI + IPC | sim — interface wrap + splits |
+| 17 | 53 | `internal/scraper/`, `internal/api/providers/`, `internal/downloader/`, `pkg/goanime/...`, misc | parcial |
+| **TOTAL** | **165** | | |
 
-#### `internal/api/movie/` — 27 funções
-**enrich.go:136** (1): `EnrichWithOMDb`
-**enrich.go:14** (1): `EnrichMedia`
-**enrich.go:291** (1): `FormatMediaInfo`
-**omdb.go:124** (1): `GetByIMDBID`
-**omdb.go:150** (1): `GetByTitle`
-**omdb.go:180** (1): `makeRequest`
-**omdb.go:202** (1): `GetRuntimeMinutes`
-**omdb.go:211** (1): `GetRating`
-**omdb.go:217** (1): `GetGenres`
-**omdb.go:70** (1): `NewOMDbClient`
-**omdb.go:89** (1): `IsConfigured`
-**omdb.go:94** (1): `SearchByTitle`
-**ssrf.go:21** (1): `isDisallowedIP`
-**ssrf.go:30** (1): `safeDialFunc`
-**ssrf.go:55** (1): `safeMovieTransport`
-**tmdb.go:109** (1): `SearchTV`
-**tmdb.go:166** (1): `GetTVSeasons`
-**tmdb.go:184** (1): `GetSeasonEpisodes`
-**tmdb.go:203** (1): `GetCredits`
-**tmdb.go:220** (1): `FindByIMDBID`
-**tmdb.go:249** (1): `GetTrending`
-**tmdb.go:273** (1): `GetPopular`
-**tmdb.go:324** (1): `GetImageURL`
-**tmdb.go:36** (1): `NewTMDBClient`
-**tmdb.go:54** (1): `IsConfigured`
-**tmdb.go:59** (1): `SearchMulti`
-**tmdb.go:86** (1): `SearchMovies`
+**Pós-FASE 17 projetado:** ≥ 70% cobertura, ≤ 50 funções a 0% (apenas TUI puro + `main()` + exemplos).
 
-#### `internal/api/providers/` — 46 funções
-**registry.go:27** (1): `RegisterProvider`
-**registry.go:35** (1): `ForKind`
-**registry.go:68** (1): `ForAnime`
-**registry.go:79** (1): `HasProvider`
-**registry.go:87** (1): `ResetForTesting`
-**source_providers.go:109** (1): `init`
-**source_providers.go:115** (1): `Kind`
-**source_providers.go:116** (1): `HasSeasons`
-**source_providers.go:118** (1): `FetchEpisodes`
-**source_providers.go:126** (1): `FetchStreamURL`
-**source_providers.go:14** (1): `EpisodeNumber`
-**source_providers.go:144** (1): `init`
-**source_providers.go:150** (1): `Kind`
-**source_providers.go:151** (1): `HasSeasons`
-**source_providers.go:153** (1): `FetchEpisodes`
-**source_providers.go:161** (1): `FetchStreamURL`
-**source_providers.go:182** (1): `init`
-**source_providers.go:188** (1): `Kind`
-**source_providers.go:189** (1): `HasSeasons`
-**source_providers.go:191** (1): `FetchEpisodes`
-**source_providers.go:199** (1): `FetchStreamURL`
-**source_providers.go:220** (1): `init`
-**source_providers.go:226** (1): `Kind`
-**source_providers.go:227** (1): `HasSeasons`
-**source_providers.go:229** (1): `FetchEpisodes`
-**source_providers.go:237** (1): `FetchStreamURL`
-**source_providers.go:255** (1): `init`
-**source_providers.go:261** (1): `Kind`
-**source_providers.go:262** (1): `HasSeasons`
-**source_providers.go:264** (1): `FetchEpisodes`
-**source_providers.go:272** (1): `FetchStreamURL`
-**source_providers.go:299** (1): `init`
-**source_providers.go:305** (1): `Kind`
-**source_providers.go:306** (1): `HasSeasons`
-**source_providers.go:308** (1): `FetchEpisodes`
-**source_providers.go:316** (1): `FetchStreamURL`
-**source_providers.go:33** (1): `init`
-**source_providers.go:39** (1): `Kind`
-**source_providers.go:40** (1): `HasSeasons`
-**source_providers.go:42** (1): `FetchEpisodes`
-**source_providers.go:51** (1): `FetchStreamURL`
-**source_providers.go:74** (1): `init`
-**source_providers.go:80** (1): `Kind`
-**source_providers.go:81** (1): `HasSeasons`
-**source_providers.go:83** (1): `FetchEpisodes`
-**source_providers.go:91** (1): `FetchStreamURL`
+---
 
-#### `internal/api/providers/metadata/` — 7 funções
-**metadata.go:111** (1): `AbsoluteToSeason`
-**metadata.go:287** (1): `LookupIMDBID`
-**metadata.go:352** (1): `ApplyToAnime`
-**metadata.go:440** (1): `inferSeasonNumber`
-**metadata.go:449** (1): `inferSeasonNumberFromTitle`
-**metadata.go:58** (1): `NewEnricher`
-**metadata.go:66** (1): `NewEnricherWithClient`
+## FASE 15 — API + Util — Branches + Error Paths (57 funções)
 
-#### `internal/api/providers/naming/` — 9 funções
-**naming.go:104** (1): `EpisodeFilename`
-**naming.go:131** (1): `MovieFilename`
-**naming.go:140** (1): `FullPath`
-**naming.go:195** (1): `bestTitle`
-**naming.go:224** (1): `parseEpisodeNumber`
-**naming.go:58** (1): `SanitizeFilename`
-**naming.go:73** (1): `CleanTitle`
-**naming.go:85** (1): `SeriesDir`
-**naming.go:95** (1): `SeasonDir`
+### `internal/api/` — 27 funções
 
-#### `internal/api/source/` — 7 funções
-**definition.go:81** (1): `matchNonExplicit`
-**kind.go:28** (1): `ScraperTypeFor`
-**resolve.go:107** (1): `ExtractAllAnimeID`
-**resolve.go:26** (1): `Resolve`
-**resolve.go:63** (1): `ResolveURL`
-**resolve.go:79** (1): `BestEffortKind`
-**resolve.go:88** (1): `IsAllAnimeShortID`
+**allanime_enhanced.go**
+- L14: `GetEpisodeStreamURLEnhanced`
+- L75: `GetAllAnimeEpisodeURLDirect`
 
-#### `internal/appflow/` — 2 funções
-**anime_data.go:103** (1): `FetchAnimeDetails`
-**anime_data.go:48** (1): `SearchAnimeWithRetry`
+**allanime_smart.go**
+- L21: `DownloadAllAnimeSmartRange`
+- L81: `smartDownload`
+- L286: `smartDownloadDirect`
 
-#### `internal/discord/` — 34 funções
-**discord.go:107** (1): `IsClientLoggedIn`
-**discord.go:114** (1): `GetCurrentPlaybackPosition`
-**discord.go:129** (1): `SetSocketPath`
-**discord.go:134** (1): `GetSocketPath`
-**discord.go:139** (1): `SetEpisodeStarted`
-**discord.go:144** (1): `IsEpisodeStarted`
-**discord.go:149** (1): `SetEpisodeDuration`
-**discord.go:154** (1): `GetEpisodeDuration`
-**discord.go:159** (1): `GetAnime`
-**discord.go:164** (1): `GetIsPaused`
-**discord.go:169** (1): `GetAnimeMutex`
-**discord.go:174** (1): `GetUpdateFreq`
-**discord.go:179** (1): `Start`
-**discord.go:207** (1): `Stop`
-**discord.go:221** (1): `updateDiscordPresence`
-**discord.go:344** (1): `getPrecisePlaybackState`
-**discord.go:397** (1): `buildPreciseTimestamps`
-**discord.go:431** (1): `abs`
-**discord.go:439** (1): `getTitle`
-**discord.go:458** (1): `cleanMediaTags`
-**discord.go:46** (1): `NewRichPresenceUpdater`
-**discord.go:467** (1): `buildButtons`
-**discord.go:511** (1): `FetchDuration`
-**discord.go:538** (1): `FormatTime`
-**discord.go:70** (1): `LoginClient`
-**discord.go:91** (1): `LogoutClient`
-**init.go:105** (1): `GetInitializationTime`
-**init.go:20** (1): `NewManager`
-**init.go:29** (1): `Initialize`
-**init.go:65** (1): `Shutdown`
-**init.go:77** (1): `IsEnabled`
-**init.go:84** (1): `IsInitialized`
-**init.go:91** (1): `GetClientID`
-**init.go:96** (1): `SetClientID`
+**anime.go**
+- L28: `GetEpisodeData`
+- L33: `GetMovieData`
+- L86: `FetchAnimeDetails`
+- L116: `SearchAnime`
+- L150: `FetchAnimeData`
+- L209: `enrichAnimeData`
+- L239: `searchAnimeOnPage`
+- L288: `FetchAnimeFromAniList`
+- L292: `selectAnimeWithGoFuzzyFinder`
+- L322: `httpGetWithUA`
 
-#### `internal/download/` — 10 funções
-**workflow.go:246** (1): `HandleMovieDownloadRequest`
-**workflow.go:26** (1): `HandleDownloadRequest`
-**workflow.go:456** (1): `selectMovieFromResults`
-**workflow.go:516** (1): `selectSeason`
-**workflow.go:546** (1): `selectEpisode`
-**workflow.go:582** (1): `getSeasonEpisodeCount`
-**workflow.go:602** (1): `extractIDFromURL`
-**workflow.go:611** (1): `ExampleMovieDownload`
-**workflow.go:626** (1): `ExampleTVDownload`
-**workflow.go:643** (1): `ExampleTVRangeDownload`
+**enhanced.go**
+- L50: `runWithSpinner`
+- L90: `SearchAnimeEnhanced`
+- L368: `GetEpisodeStreamURL`
+- L481: `DownloadEpisodeEnhanced`
+- L509: `DownloadEpisodeRangeEnhanced`
+- L561: `downloadFromURL`
+- L568: `SearchAnimeWithSource`
+- L573: `GetAnimeEpisodesWithSource`
+- L578: `GetSuperFlixEpisodes`
+- L689: `GetSuperFlixStreamURL`
 
-#### `internal/downloader/` — 77 funções
-**downloader.go:1034** (1): `downloadWithYtDlp`
-**downloader.go:1064** (1): `isUnsafeExtError`
-**downloader.go:1074** (1): `promptPlayExisting`
-**downloader.go:1088** (1): `promptPlayDownloaded`
-**downloader.go:1103** (1): `promptPlayDownloadedRangeHuh`
-**downloader.go:1141** (1): `promptPlayExistingRangeHuh`
-**downloader.go:1171** (1): `playEpisode`
-**downloader.go:1208** (1): `tickCmd`
-**downloader.go:1214** (1): `Init`
-**downloader.go:1218** (1): `Update`
-**downloader.go:1284** (1): `View`
-**downloader.go:136** (1): `DownloadSingleEpisode`
-**downloader.go:167** (1): `DownloadEpisodeRange`
-**downloader.go:201** (1): `DownloadAllEpisodes`
-**downloader.go:244** (1): `downloadConcurrentWithProgress`
-**downloader.go:343** (1): `downloadMultipleWithProgress`
-**downloader.go:409** (1): `downloadEpisodeWithSharedProgress`
-**downloader.go:46** (1): `NewEpisodeDownloader`
-**downloader.go:493** (1): `findEpisodeByNumber`
-**downloader.go:503** (1): `printDownloadLocation`
-**downloader.go:51** (1): `NewEpisodeDownloaderWithAnime`
-**downloader.go:511** (1): `fileExists`
-**downloader.go:517** (1): `sanitizeDestPath`
-**downloader.go:544** (1): `episodeFilename`
-**downloader.go:559** (1): `resolveEpisodeSeason`
-**downloader.go:574** (1): `episodeDir`
-**downloader.go:591** (1): `getBestQualityURL`
-**downloader.go:600** (1): `getContentLength`
-**downloader.go:664** (1): `estimateContentLengthForAllAnime`
-**downloader.go:710** (1): `downloadWithProgress`
-**downloader.go:788** (1): `downloadEpisodeWithProgress`
-**downloader.go:838** (1): `downloadHTTPWithProgress`
-**downloader.go:941** (1): `downloadM3U8WithYtDlp`
-**movie_downloader.go:1001** (1): `playMovie`
-**movie_downloader.go:1015** (1): `extractMediaIDFromURL`
-**movie_downloader.go:1023** (1): `convertSFlixToFlixHQStreamInfo`
-**movie_downloader.go:1072** (1): `movieTickCmd`
-**movie_downloader.go:1078** (1): `Init`
-**movie_downloader.go:1082** (1): `Update`
-**movie_downloader.go:1151** (1): `View`
-**movie_downloader.go:151** (1): `DownloadTVEpisode`
-**movie_downloader.go:216** (1): `DownloadTVEpisodeRange`
-**movie_downloader.go:244** (1): `DownloadAllSeasons`
-**movie_downloader.go:360** (1): `getFlixHQMovieStream`
-**movie_downloader.go:365** (1): `getSFlixMovieStream`
-**movie_downloader.go:376** (1): `getFlixHQEpisodeStream`
-**movie_downloader.go:406** (1): `getSFlixEpisodeStream`
-**movie_downloader.go:441** (1): `downloadMovieWithProgress`
-**movie_downloader.go:46** (1): `NewMovieDownloader`
-**movie_downloader.go:529** (1): `downloadHTTPWithProgress`
-**movie_downloader.go:62** (1): `NewMovieDownloaderWithConfig`
-**movie_downloader.go:636** (1): `downloadM3U8WithYtDlp`
-**movie_downloader.go:676** (1): `downloadM3U8WithYtDlpDirect`
-**movie_downloader.go:798** (1): `downloadM3U8WithNativeHLS`
-**movie_downloader.go:84** (1): `DownloadMovie`
-**movie_downloader.go:900** (1): `extractRefererFromStreamURL`
-**movie_downloader.go:912** (1): `getContentLength`
-**movie_downloader.go:942** (1): `fileExists`
-**movie_downloader.go:948** (1): `sanitizeDestPath`
-**movie_downloader.go:973** (1): `promptPlayExisting`
-**movie_downloader.go:987** (1): `promptPlayDownloaded`
-**nineanime_downloader.go:103** (1): `DownloadSingleEpisode`
-**nineanime_downloader.go:139** (1): `DownloadEpisodeRange`
-**nineanime_downloader.go:177** (1): `buildOutputDir`
-**nineanime_downloader.go:199** (1): `episodeFilename`
-**nineanime_downloader.go:213** (1): `resolveStream`
-**nineanime_downloader.go:277** (1): `promptSubtitleLanguage`
-**nineanime_downloader.go:364** (1): `downloadSubtitles`
-**nineanime_downloader.go:52** (1): `NewNineAnimeDownloader`
-**nineanime_downloader.go:523** (1): `downloadFile`
-**nineanime_downloader.go:560** (1): `downloadEpisodeWithProgress`
-**nineanime_downloader.go:638** (1): `downloadBatchWithProgress`
-**nineanime_downloader.go:712** (1): `downloadStream`
-**nineanime_downloader.go:731** (1): `downloadNativeHLS`
-**nineanime_downloader.go:76** (1): `DownloadAllEpisodes`
-**nineanime_downloader.go:787** (1): `downloadWithYtDlp`
-**nineanime_downloader.go:905** (1): `isRetryableDownloadError`
+**episode_providers.go**
+- L367: `getKitsuAnimeID`
+- L441: `GetEpisodeDataWithFallback`
+### `internal/util/` — 30 funções
 
-#### `internal/downloader/hls/` — 7 funções
-**hls.go:110** (1): `Download`
-**hls.go:198** (1): `selectBestStream`
-**hls.go:249** (1): `parseMediaPlaylist`
-**hls.go:57** (1): `NewDownloader`
-**hls.go:590** (1): `DownloadToFile`
-**hls.go:597** (1): `DownloadToFileWithClient`
-**hls.go:87** (1): `NewDownloaderWithClient`
+**httpclient.go**
+- L308: `PreWarmConnections`
 
-#### `internal/handlers/` — 28 funções
-**download.go:11** (1): `HandleDownloadRequest`
-**download.go:26** (1): `HandleMovieDownloadRequest`
-**media.go:117** (1): `SelectSeason`
-**media.go:138** (1): `SelectEpisode`
-**media.go:159** (1): `GetStreamInfo`
-**media.go:164** (1): `GetStreamInfoWithContext`
-**media.go:189** (1): `GetStreamWithQuality`
-**media.go:194** (1): `GetStreamWithQualityContext`
-**media.go:199** (1): `SelectQuality`
-**media.go:220** (1): `GetAvailableQualities`
-**media.go:225** (1): `GetAnimeStreamURL`
-**media.go:230** (1): `InteractiveMediaFlow`
-**media.go:26** (1): `NewMediaHandler`
-**media.go:283** (1): `handleFlixHQPlayback`
-**media.go:357** (1): `selectMovieQuality`
-**media.go:36** (1): `SetOptions`
-**media.go:372** (1): `handleAnimePlayback`
-**media.go:435** (1): `extractIDFromURL`
-**media.go:444** (1): `convertSubtitles`
-**media.go:49** (1): `SearchMedia`
-**media.go:65** (1): `SelectMediaType`
-**media.go:87** (1): `SelectMedia`
-**playback.go:18** (1): `HandlePlaybackMode`
-**update.go:11** (1): `HandleUpdateRequest`
-**upscale.go:145** (1): `isImageExtension`
-**upscale.go:15** (1): `HandleUpscaleRequest`
-**upscale.go:68** (1): `handleImageUpscale`
-**upscale.go:88** (1): `handleVideoUpscale`
+**logger.go**
+- L34: `PrintSavedLocation`
+- L44: `getColoredPrefix`
+- L59: `GetLogDir`
+- L80: `initFileLogger`
+- L139: `InitLogger`
+- L199: `showDebugBanner`
+- L234: `CloseLogFile`
+- L263: `GetLogFileWriter`
+- L273: `Debug`
+- L286: `Info`
+- L304: `Error`
+- L313: `Fatal`
+- L337: `Infof`
+- L346: `Warnf`
+- L355: `Errorf`
 
-#### `internal/models/` — 13 funções
-**media.go:102** (1): `IsMovie`
-**media.go:107** (1): `IsTV`
-**media.go:112** (1): `IsMovieOrTV`
-**media.go:117** (1): `GetDisplayName`
-**media.go:130** (1): `OfficialTitle`
-**media.go:152** (1): `GetRatingDisplay`
-**media.go:160** (1): `GetGenresDisplay`
-**media.go:169** (1): `GetRuntimeDisplay`
-**media.go:97** (1): `IsAnime`
-**tmdb.go:110** (1): `GetBackdropURL`
-**tmdb.go:79** (1): `GetDisplayTitle`
-**tmdb.go:87** (1): `GetReleaseYear`
-**tmdb.go:99** (1): `GetPosterURL`
+**util.go**
+- L300: `RegisterCleanup`
+- L307: `RunCleanup`
+- L322: `ErrorHandler`
+- L334: `Helper`
+- L389: `FlagParser`
+- L529: `getUserInput`
+- L554: `TreatingAnimeName`
+- L560: `handleDownloadModeWithSmart`
+- L766: `handleUpscaleMode`
+- L817: `handleMovieDownloadMode`
+- L1116: `DefaultDownloadDir`
+- L1127: `DefaultMovieDownloadDir`
+- L1163: `FormatPlexMovieDir`
+- L1192: `FormatPlexEpisodeDir`
 
-#### `internal/playback/` — 23 funções
-**allanime_navigation.go:104** (1): `isAllAnimeSource`
-**allanime_navigation.go:124** (1): `extractAllAnimeID`
-**allanime_navigation.go:145** (1): `HandleAllAnimeEpisodeNavigation`
-**allanime_navigation.go:30** (1): `NewAllAnimeNavigator`
-**allanime_navigation.go:58** (1): `GetNextEpisode`
-**allanime_navigation.go:74** (1): `GetPreviousEpisode`
-**allanime_navigation.go:90** (1): `GetTotalEpisodes`
-**allanime_navigation.go:95** (1): `ListAllEpisodes`
-**common.go:183** (1): `FindEpisodeByNumber`
-**common.go:22** (1): `PlayEpisode`
-**input.go:17** (1): `GetUserInput`
-**movie.go:179** (1): `createUpdater`
-**movie.go:197** (1): `getSocketPath`
-**movie.go:23** (1): `HandleMovie`
-**series.go:20** (1): `printEpisodeNotFoundMsg`
-**series.go:206** (1): `SelectInitialEpisode`
-**series.go:224** (1): `handleUserNavigation`
-**series.go:24** (1): `HandleSeries`
-**series.go:247** (1): `handleUserNavigationEnhanced`
-**series.go:258** (1): `handleAllAnimeNavigation`
-**series.go:302** (1): `CheckIfSeries`
-**series.go:313** (1): `CheckIfSeriesEnhanced`
-**series.go:323** (1): `ChangeAnimeLocal`
+---
 
-#### `internal/player/` — 128 funções
-**download.go:1068** (1): `extractRefererFromURL`
-**download.go:1080** (1): `ExtractVideoSources`
-**download.go:1264** (1): `ExtractVideoSourcesWithPrompt`
-**download.go:1295** (1): `HandleBatchDownload`
-**download.go:147** (1): `combineParts`
-**download.go:1876** (1): `getEpisodeRange`
-**download.go:1982** (1): `printBatchDownloadLocation`
-**download.go:1996** (1): `fileExists`
-**download.go:2002** (1): `handleExistingEpisodes`
-**download.go:2088** (1): `askAndPlayDownloadedEpisode`
-**download.go:209** (1): `isBloggerProxyURL`
-**download.go:216** (1): `LooksLikeHLS`
-**download.go:225** (1): `hasUnsafeExtension`
-**download.go:240** (1): `isAnimeFireVideoAPIURL`
-**download.go:246** (1): `resolveDownloadURL`
-**download.go:275** (1): `selectAnimeFireDownloadSource`
-**download.go:351** (1): `resolveAnimeFireFallbackDownloadURL`
-**download.go:386** (1): `downloadAnimeFireDirectWithFallback`
-**download.go:464** (1): `recordBatchDownloadFailure`
-**download.go:488** (1): `downloadBloggerDirect`
-**download.go:557** (1): `downloadBloggerChunk`
-**download.go:655** (1): `DownloadVideo`
-**download.go:708** (1): `downloadWithYtDlp`
-**download.go:859** (1): `isUnsafeExtensionError`
-**download.go:868** (1): `isRetryableError`
-**download.go:884** (1): `downloadWithNativeHLS`
-**download.go:980** (1): `downloadDirectHTTP`
-**helper.go:151** (1): `tickCmd`
-**helper.go:39** (1): `Update`
-**player.go:106** (1): `IsCurrentMediaMovie`
-**player.go:113** (1): `setLastAnimeURL`
-**player.go:120** (1): `getLastAnimeURL`
-**player.go:1236** (1): `askForDownload`
-**player.go:1279** (1): `askForPlayOffline`
-**player.go:1295** (1): `ToggleSubtitle`
-**player.go:1304** (1): `GetPlaybackStats`
-**player.go:1329** (1): `SetPlaybackSpeed`
-**player.go:1339** (1): `CycleAudioTrack`
-**player.go:1348** (1): `CycleSubtitleTrack`
-**player.go:1357** (1): `SetAudioTrack`
-**player.go:1367** (1): `SetSubtitleTrack`
-**player.go:1377** (1): `GetAudioTracks`
-**player.go:140** (1): `snapshotMedia`
-**player.go:1402** (1): `GetSubtitleTracks`
-**player.go:1427** (1): `GetCurrentAudioTrack`
-**player.go:1439** (1): `GetCurrentSubtitleTrack`
-**player.go:1455** (1): `handleUpscaleFromMenu`
-**player.go:156** (1): `SetSeasonMap`
-**player.go:1566** (1): `printDownloadLocation`
-**player.go:1577** (1): `downloadSubtitleFiles`
-**player.go:164** (1): `SetMediaMeta`
-**player.go:171** (1): `GetMediaMeta`
-**player.go:239** (1): `Init`
-**player.go:289** (1): `taskTotal`
-**player.go:295** (1): `shouldGrowProgressTotal`
-**player.go:340** (1): `setProgressReceived`
-**player.go:367** (1): `resetProgressReceived`
-**player.go:395** (1): `setProgressPeak`
-**player.go:412** (1): `StartVideo`
-**player.go:46** (1): `PreWarmMPVPath`
-**player.go:507** (1): `MpvSendCommand`
-**player.go:512** (1): `filterMPVArgs`
-**player.go:627** (1): `mpvSendCommand`
-**player.go:708** (1): `HandleDownloadAndPlay`
-**player.go:73** (1): `SetAnimeName`
-**player.go:82** (1): `SetMediaType`
-**player.go:870** (1): `downloadAndPlayEpisode`
-**player.go:91** (1): `SetExactMediaType`
-**player.go:99** (1): `GetExactMediaType`
-**player_unix.go:14** (1): `setProcessGroup`
-**player_unix.go:23** (1): `findMPVPath`
-**playvideo.go:1016** (1): `updateTracking`
-**playvideo.go:104** (1): `seekToResumePosition`
-**playvideo.go:1056** (1): `showPlayerMenu`
-**playvideo.go:1111** (1): `handleUserInput`
-**playvideo.go:1173** (1): `playNextEpisode`
-**playvideo.go:1182** (1): `playPreviousEpisode`
-**playvideo.go:1191** (1): `selectEpisode`
-**playvideo.go:1211** (1): `switchEpisode`
-**playvideo.go:1270** (1): `skipIntro`
-**playvideo.go:1280** (1): `selectAudioTrack`
-**playvideo.go:1370** (1): `selectSubtitleTrack`
-**playvideo.go:160** (1): `applySkipTimes`
-**playvideo.go:183** (1): `showResumeDialog`
-**playvideo.go:281** (1): `playVideo`
-**playvideo.go:565** (1): `getCurrentEpisode`
-**playvideo.go:60** (1): `waitForVideoReady`
-**playvideo.go:643** (1): `getTrackerDBPath`
-**playvideo.go:667** (1): `trackingKey`
-**playvideo.go:672** (1): `initTracking`
-**playvideo.go:745** (1): `InitTrackerAsync`
-**playvideo.go:759** (1): `fetchAniSkipAsync`
-**playvideo.go:769** (1): `showShaderOSD`
-**playvideo.go:790** (1): `applyAniSkipResults`
-**playvideo.go:814** (1): `initDiscordPresence`
-**playvideo.go:825** (1): `waitForPlaybackStart`
-**playvideo.go:840** (1): `updateEpisodeDuration`
-**playvideo.go:879** (1): `updateTrackingWithDuration`
-**playvideo.go:896** (1): `getEpisodeTitle`
-**playvideo.go:921** (1): `findEpisodeIndex`
-**playvideo.go:955** (1): `preloadNextEpisode`
-**playvideo.go:983** (1): `startTrackingRoutine`
-**scraper.go:1079** (1): `isPlayableVideoURL`
-**scraper.go:1093** (1): `needsVideoExtraction`
-**scraper.go:1102** (1): `extractActualVideoURL`
-**scraper.go:1311** (1): `extractResolution`
-**scraper.go:1322** (1): `abs`
-**scraper.go:160** (1): `estimateContentLengthForAllAnime`
-**scraper.go:215** (1): `SelectEpisodeWithFuzzyFinder`
-**scraper.go:279** (1): `ExtractEpisodeNumber`
-**scraper.go:311** (1): `GetVideoURLForEpisode`
-**scraper.go:325** (1): `GetVideoURLForEpisodeEnhanced`
-**scraper.go:439** (1): `isAllAnimeSourcePlayer`
-**scraper.go:462** (1): `isAnimeDriveSourcePlayer`
-**scraper.go:479** (1): `isFlixHQSourcePlayer`
-**scraper.go:496** (1): `isNumericString`
-**scraper.go:504** (1): `isLikelyAllAnimeID`
-**scraper.go:519** (1): `extractVideoURL`
-**scraper.go:618** (1): `fetchContent`
-**scraper.go:642** (1): `findBloggerLink`
-**scraper.go:654** (1): `newSurfClient`
-**scraper.go:66** (1): `DownloadFolderFormatter`
-**scraper.go:666** (1): `newSurfDownloadClient`
-**scraper.go:682** (1): `getBloggerSessionClient`
-**scraper.go:896** (1): `extractBloggerVideoURL`
-**scraper.go:927** (1): `GetBloggerVideoURL`
-**scraper.go:948** (1): `startBloggerProxy`
-**socket_unix.go:15** (1): `dialMPVSocket`
+## FASE 16 — Playback + Handlers + Discord + Upscaler + Updater (TUI/IPC com refactor) (55 funções)
 
-#### `internal/scraper/` — 314 funções
-**allanime.go:1125** (1): `GetStreamURL`
-**allanime.go:1132** (1): `GetType`
-**allanime.go:183** (1): `NewAllAnimeClient`
-**allanime.go:412** (1): `extractEpisodes`
-**allanime.go:461** (1): `GetAnimeEpisodesWithAniSkip`
-**allanime.go:486** (1): `SendSkipTimesToMPV`
-**allanime.go:566** (1): `parseEpisodeNum`
-**allanime.go:577** (1): `GetAnimeDetails`
-**allanime.go:782** (1): `getPriorityScore`
-**allanime.go:791** (1): `isDirectProviderURL`
-**allanime.go:796** (1): `extractSourceURLs`
-**allanime.go:854** (1): `extractToBeParsedBlob`
-**allanime.go:889** (1): `decodeSourceURL`
-**allanime.go:952** (1): `prioritizeLinks`
-**animedrive.go:1072** (1): `ResolveVideoURL`
-**animedrive.go:1078** (1): `GetVideoURLWithSelection`
-**animedrive.go:1132** (1): `GetVideoURL`
-**animedrive.go:1208** (1): `getVideoURLFallback`
-**animedrive.go:1426** (1): `extractFromIframe`
-**animedrive.go:1619** (1): `resolveURL`
-**animedrive.go:1630** (1): `GetStreamURL`
-**animedrive.go:1644** (1): `GetStreamURLWithSelection`
-**animedrive.go:1658** (1): `TotalPages`
-**animedrive.go:235** (1): `NewAnimeDriveClient`
-**animedrive.go:249** (1): `NewAnimeDriveClientWithContext`
-**animedrive.go:264** (1): `AlphabetLetters`
-**animedrive.go:285** (1): `isPreferredDomain`
-**animedrive.go:295** (1): `isProblematicDomain`
-**animedrive.go:305** (1): `decorateRequest`
-**animedrive.go:312** (1): `shouldRetry`
-**animedrive.go:316** (1): `sleep`
-**animedrive.go:322** (1): `extractIDFromURL`
-**animedrive.go:561** (1): `GetAnimesByLetter`
-**animedrive.go:690** (1): `GetAnimesByGenre`
-**animedrive.go:70** (1): `Badge`
-**animefire.go:125** (1): `decorateRequest`
-**animefire.go:134** (1): `shouldRetry`
-**animefire.go:138** (1): `sleep`
-**animefire.go:188** (1): `resolveURL`
-**animefire.go:199** (1): `GetAnimeEpisodes`
-**animefire.go:268** (1): `parseEpisodes`
-**animefire.go:41** (1): `NewAnimefireClient`
-**animefire.go:518** (1): `GetAnimeDetails`
-**errors.go:25** (1): `checkHTTPStatus`
-**errors.go:34** (1): `checkHTMLResponse`
-**flixhq.go:103** (1): `SetMediaPath`
-**flixhq.go:1071** (1): `extractSourcesFromServer`
-**flixhq.go:109** (1): `ExtractMediaPath`
-**flixhq.go:1119** (1): `extractFromEmbedURL`
-**flixhq.go:1143** (1): `extractFromEmbedURLSingle`
-**flixhq.go:1234** (1): `GetAvailableQualities`
-**flixhq.go:1239** (1): `GetAvailableQualitiesWithContext`
-**flixhq.go:1315** (1): `GetMovieQualities`
-**flixhq.go:1320** (1): `GetMovieQualitiesWithContext`
-**flixhq.go:1330** (1): `GetMovieStreamWithQuality`
-**flixhq.go:1335** (1): `GetMovieStreamWithQualityContext`
-**flixhq.go:1377** (1): `GetQualityLabels`
-**flixhq.go:1386** (1): `QualityToLabel`
-**flixhq.go:1406** (1): `LabelToQuality`
-**flixhq.go:1427** (1): `sourcesToQualityOptions`
-**flixhq.go:1456** (1): `sourcesToFlixHQQualityOptions`
-**flixhq.go:1469** (1): `qualityToResolution`
-**flixhq.go:1485** (1): `filterSubtitlesByLanguage`
-**flixhq.go:1503** (1): `SelectQualityInteractive`
-**flixhq.go:1508** (1): `SelectQualityInteractiveWithContext`
-**flixhq.go:1546** (1): `ClearCache`
-**flixhq.go:1554** (1): `ExtractStreamInfoWithContext`
-**flixhq.go:1579** (1): `extractStreamFromAPI`
-**flixhq.go:1731** (1): `parseQuality`
-**flixhq.go:1752** (1): `qualityToInt`
-**flixhq.go:1769** (1): `abs`
-**flixhq.go:1778** (1): `decorateRequest`
-**flixhq.go:1785** (1): `shouldRetry`
-**flixhq.go:1789** (1): `sleep`
-**flixhq.go:1809** (1): `extractSearchResults`
-**flixhq.go:1888** (1): `resolveURL`
-**flixhq.go:1898** (1): `extractLanguageFromLabel`
-**flixhq.go:1956** (1): `ToMedia`
-**flixhq.go:1979** (1): `ToEpisodeModel`
-**flixhq.go:1993** (1): `ToStreamInfo`
-**flixhq.go:218** (1): `NewFlixHQClient`
-**flixhq.go:231** (1): `NewFlixHQClientWithContext`
-**flixhq.go:247** (1): `SearchMedia`
-**flixhq.go:336** (1): `GetTrending`
-**flixhq.go:341** (1): `GetRecentMovies`
-**flixhq.go:346** (1): `GetRecentTV`
-**flixhq.go:350** (1): `getMediaFromSection`
-**flixhq.go:382** (1): `getMediaFromPath`
-**flixhq.go:595** (1): `GetMovieServerID`
-**flixhq.go:714** (1): `ExtractStreamInfo`
-**flixhq.go:719** (1): `GetStreamURL`
-**flixhq.go:724** (1): `GetStreamURLWithContext`
-**flixhq.go:757** (1): `GetInfo`
-**flixhq.go:870** (1): `GetServers`
-**flixhq.go:875** (1): `GetServersWithContext`
-**flixhq.go:937** (1): `parseMovieServers`
-**flixhq.go:964** (1): `parseTVServers`
-**flixhq.go:992** (1): `GetSources`
-**flixhq.go:997** (1): `GetSourcesWithContext`
-**goyabu.go:217** (1): `searchAnimeHTML`
-**goyabu.go:276** (1): `extractSearchResults`
-**goyabu.go:69** (1): `NewGoyabuClient`
-**goyabu.go:691** (1): `decorateRequest`
-**goyabu.go:699** (1): `shouldRetry`
-**goyabu.go:703** (1): `sleep`
-**goyabu.go:710** (1): `resolveURL`
-**media_manager.go:102** (1): `SearchMoviesAndTV`
-**media_manager.go:107** (1): `SearchFlixHQOnly`
-**media_manager.go:112** (1): `SearchSFlixMoviesAndTV`
-**media_manager.go:126** (1): `SearchAllMovieSources`
-**media_manager.go:212** (1): `ConvertSFlixToFlixHQ`
-**media_manager.go:23** (1): `NewMediaManager`
-**media_manager.go:233** (1): `GetTrendingMovies`
-**media_manager.go:238** (1): `GetFlixHQTrendingMovies`
-**media_manager.go:243** (1): `GetSFlixTrendingMovies`
-**media_manager.go:248** (1): `GetAllTrendingMovies`
-**media_manager.go:256** (1): `GetRecentMovies`
-**media_manager.go:261** (1): `GetFlixHQRecentMovies`
-**media_manager.go:266** (1): `GetSFlixRecentMovies`
-**media_manager.go:271** (1): `GetAllRecentMovies`
-**media_manager.go:279** (1): `GetRecentTV`
-**media_manager.go:284** (1): `GetFlixHQRecentTV`
-**media_manager.go:289** (1): `GetSFlixRecentTV`
-**media_manager.go:294** (1): `GetAllRecentTV`
-**media_manager.go:302** (1): `fetchFromBothSources`
-**media_manager.go:379** (1): `GetTVSeasons`
-**media_manager.go:384** (1): `GetSFlixTVSeasons`
-**media_manager.go:389** (1): `GetTVEpisodes`
-**media_manager.go:394** (1): `GetSFlixTVEpisodes`
-**media_manager.go:399** (1): `GetMovieStreamInfo`
-**media_manager.go:424** (1): `GetSFlixMovieStreamInfo`
-**media_manager.go:449** (1): `GetTVEpisodeStreamInfo`
-**media_manager.go:474** (1): `GetSFlixTVEpisodeStreamInfo`
-**media_manager.go:499** (1): `GetAnimeStreamURL`
-**media_manager.go:50** (1): `SearchAll`
-**media_manager.go:532** (1): `ConvertFlixHQToAnime`
-**media_manager.go:548** (1): `ConvertFlixHQEpisodesToEpisodes`
-**media_manager.go:55** (1): `SearchAnimeOnly`
-**media_manager.go:557** (1): `ConvertSFlixToAnime`
-**media_manager.go:573** (1): `ConvertSFlixEpisodesToEpisodes`
-**media_manager.go:582** (1): `GetScraperManager`
-**media_manager.go:587** (1): `GetFlixHQClient`
-**media_manager.go:592** (1): `GetSFlixClient`
-**media_manager.go:597** (1): `GetMovieInfo`
-**media_manager.go:602** (1): `GetSFlixMovieInfo`
-**media_manager.go:607** (1): `GetMovieInfoWithContext`
-**media_manager.go:612** (1): `GetSFlixMovieInfoWithContext`
-**media_manager.go:617** (1): `GetServers`
-**media_manager.go:622** (1): `GetSFlixServers`
-**media_manager.go:627** (1): `GetServersWithContext`
-**media_manager.go:632** (1): `GetSources`
-**media_manager.go:637** (1): `GetSourcesWithContext`
-**media_manager.go:642** (1): `GetAvailableQualities`
-**media_manager.go:647** (1): `GetAvailableQualitiesWithContext`
-**media_manager.go:652** (1): `GetStreamWithQuality`
-**media_manager.go:657** (1): `GetStreamWithQualityWithContext`
-**media_manager.go:710** (1): `HealthCheck`
-**media_manager.go:715** (1): `ClearCache`
-**media_manager.go:720** (1): `GetMovieQualities`
-**media_manager.go:725** (1): `GetMovieQualitiesWithContext`
-**media_manager.go:730** (1): `GetEpisodeQualities`
-**media_manager.go:735** (1): `GetEpisodeQualitiesWithContext`
-**media_manager.go:744** (1): `GetMovieStreamWithQuality`
-**media_manager.go:749** (1): `GetMovieStreamWithQualityContext`
-**media_manager.go:754** (1): `GetEpisodeStreamWithQuality`
-**media_manager.go:759** (1): `GetEpisodeStreamWithQualityContext`
-**nineanime.go:103** (1): `NewNineAnimeClient`
-**nineanime.go:117** (1): `decorateRequest`
-**nineanime.go:125** (1): `decorateAJAXRequest`
-**nineanime.go:131** (1): `shouldRetry`
-**nineanime.go:135** (1): `sleep`
-**nineanime.go:141** (1): `isChallengePage`
-**nineanime.go:156** (1): `SearchAnime`
-**nineanime.go:254** (1): `extractSearchResults`
-**nineanime.go:306** (1): `GetEpisodes`
-**nineanime.go:311** (1): `GetEpisodesWithContext`
-**nineanime.go:376** (1): `GetAnimeEpisodes`
-**nineanime.go:403** (1): `GetServers`
-**nineanime.go:408** (1): `GetServersWithContext`
-**nineanime.go:480** (1): `GetSource`
-**nineanime.go:485** (1): `GetSourceWithContext`
-**nineanime.go:527** (1): `GetStreamInfo`
-**nineanime.go:532** (1): `GetStreamInfoWithContext`
-**nineanime.go:581** (1): `parseRapidCloudResponse`
-**nineanime.go:654** (1): `scrapeEmbedPage`
-**nineanime.go:698** (1): `GetStreamURL`
-**nineanime.go:803** (1): `ToAnimeModel`
-**sflix.go:1089** (1): `GetEmbedLink`
-**sflix.go:1138** (1): `GetMovieServerID`
-**sflix.go:1214** (1): `GetEpisodeServerID`
-**sflix.go:1293** (1): `ExtractStreamInfo`
-**sflix.go:1299** (1): `ExtractStreamInfoWithContext`
-**sflix.go:1324** (1): `extractStreamFromAPI`
-**sflix.go:1480** (1): `GetStreamURL`
-**sflix.go:1485** (1): `GetStreamURLWithContext`
-**sflix.go:150** (1): `NewSFlixClient`
-**sflix.go:1518** (1): `GetAvailableQualities`
-**sflix.go:1523** (1): `GetAvailableQualitiesWithContext`
-**sflix.go:1549** (1): `SelectBestQuality`
-**sflix.go:1612** (1): `ClearCache`
-**sflix.go:1620** (1): `decorateRequest`
-**sflix.go:1627** (1): `shouldRetry`
-**sflix.go:163** (1): `NewSFlixClientWithContext`
-**sflix.go:1631** (1): `sleep`
-**sflix.go:1637** (1): `isChallengePage`
-**sflix.go:1651** (1): `extractSearchResults`
-**sflix.go:1663** (1): `parseMediaItem`
-**sflix.go:1746** (1): `detectMediaType`
-**sflix.go:179** (1): `SearchMedia`
-**sflix.go:1793** (1): `resolveURL`
-**sflix.go:1803** (1): `extractLanguageFromLabel`
-**sflix.go:1829** (1): `QualityToLabel`
-**sflix.go:1878** (1): `ToMedia`
-**sflix.go:1900** (1): `ToEpisodeModel`
-**sflix.go:1914** (1): `ToStreamInfo`
-**sflix.go:268** (1): `GetTrending`
-**sflix.go:273** (1): `GetRecentMovies`
-**sflix.go:278** (1): `GetRecentTV`
-**sflix.go:282** (1): `getMediaFromPath`
-**sflix.go:307** (1): `GetSeasons`
-**sflix.go:368** (1): `GetEpisodes`
-**sflix.go:435** (1): `GetInfo`
-**sflix.go:440** (1): `GetInfoWithContext`
-**sflix.go:54** (1): `SetMediaPath`
-**sflix.go:642** (1): `fetchTVEpisodes`
-**sflix.go:757** (1): `GetServers`
-**sflix.go:762** (1): `GetServersWithContext`
-**sflix.go:846** (1): `GetSources`
-**sflix.go:851** (1): `GetSourcesWithContext`
-**sflix.go:899** (1): `sortServersByPriority`
-**sflix.go:925** (1): `extractSourcesFromServer`
-**sflix.go:974** (1): `extractFromEmbedURL`
-**sflix.go:998** (1): `extractFromEmbedURLSingle`
-**source_circuit.go:106** (1): `circuitOpenDiagnostic`
-**source_circuit.go:130** (1): `recordSourceSuccess`
-**source_circuit.go:134** (1): `recordSourceFailure`
-**source_circuit.go:29** (1): `newSourceCircuitBreaker`
-**source_circuit.go:62** (1): `recordSuccess`
-**source_circuit.go:72** (1): `recordFailure`
-**source_circuit.go:96** (1): `ensureCircuitBreaker`
-**source_diagnostic.go:159** (1): `NewHTTPStatusError`
-**source_diagnostic.go:183** (1): `NewBlockedChallengeError`
-**source_diagnostic.go:194** (1): `NewParserError`
-**source_diagnostic.go:205** (1): `NewDecryptError`
-**source_diagnostic.go:216** (1): `NewDownloadExpiredError`
-**source_diagnostic.go:228** (1): `NewInternalBugError`
-**source_diagnostic.go:291** (1): `isNetworkUnavailable`
-**source_diagnostic.go:319** (1): `isBlockedStatus`
-**source_diagnostic.go:325** (1): `isOriginUnavailableStatus`
-**source_diagnostic.go:338** (1): `isCloudflareOriginStatus`
-**source_diagnostic.go:347** (1): `statusFromMessage`
-**source_diagnostic.go:357** (1): `sentinelForDiagnosticKind`
-**source_diagnostic.go:375** (1): `containsAny`
-**source_diagnostic.go:76** (1): `Is`
-**source_health.go:142** (1): `CheckAllSourcesHealth`
-**source_health.go:38** (1): `DefaultHealthCheckQuery`
-**source_health.go:48** (1): `AvailableSources`
-**ssrf.go:19** (1): `isDisallowedIP`
-**ssrf.go:28** (1): `safeDialFunc`
-**ssrf.go:53** (1): `safeScraperTransport`
-**superflix.go:107** (1): `NormalizeSuperFlixImageURL`
-**superflix.go:143** (1): `decorateRequest`
-**superflix.go:151** (1): `SetTestConfig`
-**superflix.go:159** (1): `SearchMedia`
-**superflix.go:355** (1): `ExtractTokens`
-**superflix.go:376** (1): `ExtractEpisodes`
-**superflix.go:565** (1): `ExtractPlayerExtras`
-**superflix.go:725** (1): `ToAnimeModel`
-**superflix.go:761** (1): `splitAndTrim`
-**unified.go:1011** (1): `GetType`
-**unified.go:1016** (1): `GetClient`
-**unified.go:1022** (1): `NewSuperFlixAdapterWithClient`
-**unified.go:316** (1): `sortPTBRFirst`
-**unified.go:336** (1): `cleanPTBRTitle`
-**unified.go:481** (1): `SearchAnimePTBR`
-**unified.go:522** (1): `getScraperDisplayName`
-**unified.go:546** (1): `getLanguageTag`
-**unified.go:575** (1): `Client`
-**unified.go:579** (1): `SearchAnime`
-**unified.go:584** (1): `GetAnimeEpisodes`
-**unified.go:606** (1): `GetStreamURL`
-**unified.go:635** (1): `GetType`
-**unified.go:64** (1): `PreWarmScraperManager`
-**unified.go:644** (1): `SearchAnime`
-**unified.go:648** (1): `GetAnimeEpisodes`
-**unified.go:652** (1): `GetStreamURL`
-**unified.go:659** (1): `GetType`
-**unified.go:668** (1): `SearchAnime`
-**unified.go:672** (1): `GetAnimeEpisodes`
-**unified.go:676** (1): `GetStreamURL`
-**unified.go:695** (1): `GetType`
-**unified.go:70** (1): `NewScraperManager`
-**unified.go:704** (1): `SearchAnime`
-**unified.go:726** (1): `GetAnimeEpisodes`
-**unified.go:736** (1): `GetStreamURL`
-**unified.go:783** (1): `GetType`
-**unified.go:788** (1): `GetClient`
-**unified.go:797** (1): `SearchAnime`
-**unified.go:819** (1): `GetAnimeEpisodes`
-**unified.go:825** (1): `GetStreamURL`
-**unified.go:872** (1): `GetType`
-**unified.go:877** (1): `GetClient`
-**unified.go:886** (1): `SearchAnime`
-**unified.go:890** (1): `GetAnimeEpisodes`
-**unified.go:894** (1): `GetStreamURL`
-**unified.go:900** (1): `GetType`
-**unified.go:905** (1): `GetClient`
-**unified.go:914** (1): `SearchAnime`
-**unified.go:918** (1): `GetAnimeEpisodes`
-**unified.go:922** (1): `GetStreamURL`
-**unified.go:929** (1): `GetType`
-**unified.go:938** (1): `SearchAnime`
-**unified.go:951** (1): `GetAnimeEpisodes`
-**unified.go:98** (1): `SearchAnime`
+### `internal/discord/` — 10 funções
 
-#### `internal/scraper/movie/` — 42 funções
-**flixhq.go:101** (1): `GetMovieServersWithContext`
-**flixhq.go:106** (1): `GetMovieSources`
-**flixhq.go:111** (1): `GetMovieSourcesWithContext`
-**flixhq.go:116** (1): `GetAvailableQualities`
-**flixhq.go:121** (1): `GetAvailableQualitiesWithContext`
-**flixhq.go:126** (1): `GetStreamURL`
-**flixhq.go:135** (1): `GetStreamURLWithContext`
-**flixhq.go:144** (1): `SelectBestQuality`
-**flixhq.go:149** (1): `HealthCheck`
-**flixhq.go:154** (1): `ClearCache`
-**flixhq.go:159** (1): `GetTrending`
-**flixhq.go:176** (1): `GetRecent`
-**flixhq.go:181** (1): `ToAnimeModel`
-**flixhq.go:186** (1): `ToMedia`
-**flixhq.go:191** (1): `ToStreamInfo`
-**flixhq.go:57** (1): `NewMovieClient`
-**flixhq.go:64** (1): `SearchMovies`
-**flixhq.go:69** (1): `SearchMoviesWithContext`
-**flixhq.go:86** (1): `GetMovieInfo`
-**flixhq.go:91** (1): `GetMovieInfoWithContext`
-**flixhq.go:96** (1): `GetMovieServers`
-**sflix.go:100** (1): `GetStreamURL`
-**sflix.go:109** (1): `GetStreamURLWithContext`
-**sflix.go:118** (1): `SelectBestQuality`
-**sflix.go:123** (1): `HealthCheck`
-**sflix.go:128** (1): `ClearCache`
-**sflix.go:133** (1): `GetTrending`
-**sflix.go:150** (1): `GetRecent`
-**sflix.go:155** (1): `SFlixToAnimeModel`
-**sflix.go:160** (1): `SFlixToMedia`
-**sflix.go:165** (1): `SFlixToStreamInfo`
-**sflix.go:31** (1): `NewSFlixMovieClient`
-**sflix.go:38** (1): `SearchMovies`
-**sflix.go:43** (1): `SearchMoviesWithContext`
-**sflix.go:60** (1): `GetMovieInfo`
-**sflix.go:65** (1): `GetMovieInfoWithContext`
-**sflix.go:70** (1): `GetMovieServers`
-**sflix.go:75** (1): `GetMovieServersWithContext`
-**sflix.go:80** (1): `GetMovieSources`
-**sflix.go:85** (1): `GetMovieSourcesWithContext`
-**sflix.go:90** (1): `GetAvailableQualities`
-**sflix.go:95** (1): `GetAvailableQualitiesWithContext`
+**discord.go**
+- L70: `LoginClient`
+- L91: `LogoutClient`
+- L114: `GetCurrentPlaybackPosition`
+- L179: `Start`
+- L207: `Stop`
+- L221: `updateDiscordPresence`
+- L344: `getPrecisePlaybackState`
+- L397: `buildPreciseTimestamps`
+- L511: `FetchDuration`
 
-#### `internal/tracking/` — 7 funções
-**local.go:244** (1): `migrateOldData`
-**local.go:478** (1): `DeleteAnime`
-**local.go:514** (1): `init`
-**local.go:82** (1): `GetGlobalTracker`
-**local.go:90** (1): `CloseGlobalTracker`
-**local_cgo.go:6** (1): `isCgoEnabled`
-**notice.go:8** (1): `HandleTrackingNotice`
+**init.go**
+- L29: `Initialize`
+### `internal/handlers/` — 12 funções
 
-#### `internal/tui/` — 7 funções
-**find.go:27** (1): `ResetTerminal`
-**find.go:44** (1): `Find`
-**terminal.go:13** (1): `BubbleTeaProgramOptions`
-**terminal.go:23** (1): `NewProgram`
-**terminal.go:29** (1): `RunClean`
-**terminal.go:38** (1): `safeBubbleTeaEnvironment`
-**terminal.go:85** (1): `removeEnvValue`
+**download.go**
+- L11: `HandleDownloadRequest`
+- L26: `HandleMovieDownloadRequest`
 
-#### `internal/updater/` — 12 funções
-**updater.go:289** (1): `PromptForUpdate`
-**updater.go:318** (1): `CheckAndPromptUpdate`
-**updater.go:343** (1): `CheckForUpdatesQuietly`
-**updater.go:359** (1): `isVersionNewer`
-**updater.go:406** (1): `GetCurrentPlatform`
-**updater.go:413** (1): `findAssetForPlatform`
-**updater.go:417** (1): `findAssetForPlatformWithInfo`
-**updater.go:43** (1): `CheckForUpdates`
-**updater.go:544** (1): `downloadAsset`
-**updater.go:715** (1): `truncateText`
-**updater.go:725** (1): `createWindowsUpdateScript`
-**updater.go:86** (1): `PerformUpdate`
+**media.go**
+- L48: `SearchMedia`
+- L60: `SelectMediaType`
+- L108: `GetAnimeStreamURL`
+- L113: `InteractiveMediaFlow`
+- L156: `handleAnimePlayback`
 
-#### `internal/upscaler/` — 47 funções
-**anime4k.go:118** (1): `GetImage`
-**anime4k.go:142** (1): `getGray`
-**anime4k.go:348** (1): `changeEachPixel`
-**anime4k.go:36** (1): `DefaultOptions`
-**anime4k.go:372** (1): `maxUint8`
-**anime4k.go:381** (1): `minUint8`
-**anime4k.go:396** (1): `NewAnime4KUpscaler`
-**anime4k.go:401** (1): `Close`
-**anime4k.go:404** (1): `UpscaleImage`
-**anime4k.go:416** (1): `UpscaleImageParallel`
-**anime4k.go:421** (1): `UpscaleAndSave`
-**anime4k.go:433** (1): `UpscaleImageFile`
-**anime4k.go:440** (1): `GetUpscaledDimensions`
-**anime4k.go:47** (1): `FastOptions`
-**anime4k.go:58** (1): `HighQualityOptions`
-**anime4k.go:93** (1): `NewImageFromImage`
-**anime4k.go:99** (1): `Process`
-**shaders.go:103** (1): `InstallShaders`
-**shaders.go:161** (1): `InstallGANShaders`
-**shaders.go:228** (1): `extractZip`
-**shaders.go:287** (1): `GetMPVShaderArgs`
-**shaders.go:450** (1): `GetShaderModeName`
-**shaders.go:478** (1): `GetShaderModeDescription`
-**shaders.go:506** (1): `GetAllShaderModes`
-**shaders.go:522** (1): `GetAdvancedShaderModes`
-**shaders.go:532** (1): `CycleShaderMode`
-**shaders.go:538** (1): `SetShaderMode`
-**shaders.go:57** (1): `GetShaderDir`
-**shaders.go:68** (1): `ShadersInstalled`
-**shaders.go:86** (1): `GANShadersInstalled`
-**video.go:107** (1): `Close`
-**video.go:114** (1): `verifyFFmpeg`
-**video.go:123** (1): `UpscaleVideo`
-**video.go:184** (1): `probeVideo`
-**video.go:277** (1): `extractFrames`
-**video.go:297** (1): `upscaleFrames`
-**video.go:396** (1): `upscaleSingleFrame`
-**video.go:43** (1): `DefaultVideoConfig`
-**video.go:438** (1): `encodeVideo`
-**video.go:512** (1): `Init`
-**video.go:516** (1): `Update`
-**video.go:538** (1): `View`
-**video.go:553** (1): `UpscaleVideoFile`
-**video.go:568** (1): `GetVideoInfo`
-**video.go:581** (1): `EstimateUpscaleTime`
-**video.go:603** (1): `ValidateFFmpeg`
-**video.go:94** (1): `NewVideoUpscaler`
+**playback.go**
+- L19: `HandlePlaybackMode`
 
-#### `internal/util/` — 83 funções
-**help.go:210** (1): `addOption`
-**help.go:217** (1): `addFeature`
-**help.go:224** (1): `addExample`
-**help.go:66** (1): `ShowBeautifulHelp`
-**httpclient.go:110** (1): `Get`
-**httpclient.go:127** (1): `Set`
-**httpclient.go:155** (1): `cleanupLoop`
-**httpclient.go:165** (1): `cleanup`
-**httpclient.go:189** (1): `GetAniListCache`
-**httpclient.go:197** (1): `GetSearchCache`
-**httpclient.go:211** (1): `NewWorkerPool`
-**httpclient.go:220** (1): `Submit`
-**httpclient.go:229** (1): `Wait`
-**httpclient.go:252** (1): `GetScraperPool`
-**httpclient.go:260** (1): `GetAPIPool`
-**httpclient.go:269** (1): `ParallelExecute`
-**httpclient.go:30** (1): `newSurfStdClient`
-**httpclient.go:312** (1): `PreWarmConnections`
-**httpclient.go:43** (1): `GetSharedClient`
-**httpclient.go:52** (1): `GetFastClient`
-**httpclient.go:63** (1): `NewFastClient`
-**httpclient.go:69** (1): `GetDownloadClient`
-**httpclient.go:79** (1): `PreWarmClients`
-**httpclient.go:98** (1): `NewResponseCache`
-**logger.go:139** (1): `InitLogger`
-**logger.go:199** (1): `showDebugBanner`
-**logger.go:234** (1): `CloseLogFile`
-**logger.go:263** (1): `GetLogFileWriter`
-**logger.go:273** (1): `Debug`
-**logger.go:286** (1): `Info`
-**logger.go:295** (1): `Warn`
-**logger.go:304** (1): `Error`
-**logger.go:313** (1): `Fatal`
-**logger.go:337** (1): `Infof`
-**logger.go:34** (1): `PrintSavedLocation`
-**logger.go:346** (1): `Warnf`
-**logger.go:355** (1): `Errorf`
-**logger.go:44** (1): `getColoredPrefix`
-**logger.go:59** (1): `GetLogDir`
-**logger.go:80** (1): `initFileLogger`
-**perf.go:115** (1): `IncrementCounter`
-**perf.go:129** (1): `GetCounter`
-**perf.go:141** (1): `GetMetrics`
-**perf.go:155** (1): `GetUptime`
-**perf.go:160** (1): `Reset`
-**perf.go:198** (1): `PrintReport`
-**perf.go:330** (1): `TimeFunc`
-**perf.go:342** (1): `TimeFuncWithResult`
-**perf.go:354** (1): `TimeFuncWithError`
-**perf.go:366** (1): `Perf`
-**perf.go:374** (1): `PerfCount`
-**perf.go:43** (1): `GetPerfTracker`
-**perf.go:62** (1): `StartTimer`
-**perf.go:74** (1): `Stop`
-**perf.go:84** (1): `StopAndLog`
-**perf.go:94** (1): `Record`
-**util.go:1023** (1): `stripTrailingAnimeMetadata`
-**util.go:1073** (1): `BuildMediaFolderName`
-**util.go:1104** (1): `BuildMediaFileName`
-**util.go:1115** (1): `DefaultDownloadDir`
-**util.go:1126** (1): `DefaultMovieDownloadDir`
-**util.go:1162** (1): `FormatPlexMovieDir`
-**util.go:1174** (1): `FormatPlexEpisodePath`
-**util.go:1191** (1): `FormatPlexEpisodeDir`
-**util.go:300** (1): `RegisterCleanup`
-**util.go:307** (1): `RunCleanup`
-**util.go:322** (1): `ErrorHandler`
-**util.go:334** (1): `Helper`
-**util.go:389** (1): `FlagParser`
-**util.go:45** (1): `SetGlobalSubtitles`
-**util.go:529** (1): `getUserInput`
-**util.go:554** (1): `TreatingAnimeName`
-**util.go:56** (1): `ClearGlobalSubtitles`
-**util.go:560** (1): `handleDownloadModeWithSmart`
-**util.go:61** (1): `SetGlobalReferer`
-**util.go:69** (1): `GetGlobalReferer`
-**util.go:74** (1): `ClearGlobalReferer`
-**util.go:766** (1): `handleUpscaleMode`
-**util.go:79** (1): `SetGlobalAnimeSource`
-**util.go:817** (1): `handleMovieDownloadMode`
-**util.go:87** (1): `GetGlobalAnimeSource`
-**util.go:92** (1): `Is9AnimeSource`
-**ytdlp.go:16** (1): `YtdlpCanImpersonate`
+**update.go**
+- L11: `HandleUpdateRequest`
 
-#### `internal/version/` — 2 funções
-**version.go:20** (1): `HasVersionArg`
-**version.go:28** (1): `ShowVersion`
+**upscale.go**
+- L15: `HandleUpscaleRequest`
+- L68: `handleImageUpscale`
+- L88: `handleVideoUpscale`
+### `internal/playback/` — 14 funções
 
-#### `pkg/goanime/` — 7 funções
-**client.go:104** (1): `GetEpisodeStreamURL`
-**client.go:136** (1): `GetAvailableSources`
-**client.go:16** (1): `NewClient`
-**client.go:25** (1): `SearchAnime`
-**client.go:43** (1): `GetAnimeEpisodes`
-**client.go:67** (1): `GetStreamURL`
-**client.go:85** (1): `DefaultStreamOptions`
+**common.go**
+- L20: `PlayEpisode`
 
-#### `pkg/goanime/examples/episodes/` — 1 funções
-**main.go:12** (1): `main`
+**input.go**
+- L17: `GetUserInput`
 
-#### `pkg/goanime/examples/search/` — 1 funções
-**main.go:11** (1): `main`
+**movie.go**
+- L21: `HandleMovie`
+- L172: `createUpdater`
+- L190: `getSocketPath`
 
-#### `pkg/goanime/examples/source_specific/` — 1 funções
-**main.go:12** (1): `main`
+**series.go**
+- L20: `printEpisodeNotFoundMsg`
+- L24: `HandleSeries`
+- L206: `SelectInitialEpisode`
+- L224: `handleUserNavigation`
+- L247: `handleUserNavigationEnhanced`
+- L258: `handleAllAnimeNavigation`
+- L302: `CheckIfSeries`
+- L313: `CheckIfSeriesEnhanced`
+- L323: `ChangeAnimeLocal`
+### `internal/updater/` — 8 funções
 
-#### `pkg/goanime/examples/stream/` — 1 funções
-**main.go:12** (1): `main`
+**updater.go**
+- L43: `CheckForUpdates`
+- L86: `PerformUpdate`
+- L289: `PromptForUpdate`
+- L318: `CheckAndPromptUpdate`
+- L343: `CheckForUpdatesQuietly`
+- L413: `findAssetForPlatform`
+- L544: `downloadAsset`
+- L725: `createWindowsUpdateScript`
+### `internal/upscaler/` — 11 funções
 
-#### `pkg/goanime/types/` — 7 funções
-**anime.go:148** (1): `FromInternalAnimeList`
-**anime.go:157** (1): `FromInternalEpisode`
-**anime.go:199** (1): `FromInternalEpisodeList`
-**anime.go:97** (1): `FromInternalAnime`
-**source.go:20** (1): `String`
-**source.go:32** (1): `ToScraperType`
-**source.go:44** (1): `ParseSource`
+**anime4k.go**
+- L401: `Close`
 
-**TOTAL: 1033 funções sem cobertura**
+**shaders.go**
+- L103: `InstallShaders`
+- L161: `InstallGANShaders`
+- L228: `extractZip`
+
+**video.go**
+- L277: `extractFrames`
+- L297: `upscaleFrames`
+- L396: `upscaleSingleFrame`
+- L438: `encodeVideo`
+- L512: `Init`
+- L516: `Update`
+- L538: `View`
+
+---
+
+## FASE 17 — Scraper + Providers + Downloader + SDK + Misc (53 funções)
+
+### `cmd/goanime/` — 1 funções
+
+**main.go**
+- L18: `main`
+### `internal/api/providers/` — 8 funções
+
+**source_providers.go**
+- L42: `FetchEpisodes`
+- L51: `FetchStreamURL`
+- L83: `FetchEpisodes`
+- L91: `FetchStreamURL`
+- L118: `FetchEpisodes`
+- L126: `FetchStreamURL`
+- L276: `FetchEpisodes`
+- L284: `FetchStreamURL`
+### `internal/api/providers/metadata/` — 1 funções
+
+**metadata.go**
+- L287: `LookupIMDBID`
+### `internal/appflow/` — 2 funções
+
+**anime_data.go**
+- L48: `SearchAnimeWithRetry`
+- L103: `FetchAnimeDetails`
+### `internal/download/` — 2 funções
+
+**workflow.go**
+- L18: `HandleDownloadRequest`
+- L147: `HandleMovieDownloadRequest`
+### `internal/downloader/` — 5 funções
+
+**downloader.go**
+- L343: `downloadMultipleWithProgress`
+- L710: `downloadWithProgress`
+- L838: `downloadHTTPWithProgress`
+- L941: `downloadM3U8WithYtDlp`
+- L1171: `playEpisode`
+### `internal/player/` — 1 funções
+
+**playvideo.go**
+- L828: `initDiscordPresence`
+### `internal/scraper/` — 13 funções
+
+**animefire.go**
+- L199: `GetAnimeEpisodes`
+- L268: `parseEpisodes`
+- L518: `GetAnimeDetails`
+
+**goyabu.go**
+- L788: `sleep`
+
+**media_manager.go**
+- L65: `GetAnimeStreamURL`
+- L91: `GetScraperManager`
+
+**unified.go**
+- L455: `SearchAnimePTBR`
+- L558: `GetAnimeEpisodes`
+- L580: `GetStreamURL`
+- L622: `GetAnimeEpisodes`
+- L626: `GetStreamURL`
+- L646: `GetAnimeEpisodes`
+- L650: `GetStreamURL`
+### `internal/tracking/` — 1 funções
+
+**notice.go**
+- L8: `HandleTrackingNotice`
+### `internal/tui/` — 3 funções
+
+**find.go**
+- L44: `Find`
+
+**terminal.go**
+- L13: `BubbleTeaProgramOptions`
+- L23: `NewProgram`
+### `pkg/goanime/` — 5 funções
+
+**client.go**
+- L25: `SearchAnime`
+- L43: `GetAnimeEpisodes`
+- L68: `GetStreamURL`
+- L86: `DefaultStreamOptions`
+- L105: `GetEpisodeStreamURL`
+### `pkg/goanime/examples/episodes/` — 1 funções
+
+**main.go**
+- L12: `main`
+### `pkg/goanime/examples/search/` — 1 funções
+
+**main.go**
+- L11: `main`
+### `pkg/goanime/examples/source_specific/` — 1 funções
+
+**main.go**
+- L12: `main`
+### `pkg/goanime/examples/stream/` — 1 funções
+
+**main.go**
+- L12: `main`
+### `pkg/goanime/types/` — 7 funções
+
+**anime.go**
+- L97: `FromInternalAnime`
+- L148: `FromInternalAnimeList`
+- L157: `FromInternalEpisode`
+- L199: `FromInternalEpisodeList`
+
+**source.go**
+- L20: `String`
+- L32: `ToScraperType`
+- L44: `ParseSource`
+
+---
+
+
+## Como Usar Este Arquivo
+
+### Durante uma FASE
+
+1. Abra a tabela da fase (ex: FASE 15).
+2. Para cada arquivo `.go` listado, abra-o em paralelo com seu `*_test.go`.
+3. Para cada função listada, escreva `func TestNomeDaFuncao_Cenario(t *testing.T)`.
+4. Cobertura é verificada por package no final da fase.
+
+### Verificação Pós-Fase
+
+```bash
+# Funções AINDA a 0% no pacote alvo (deve cair)
+go test ./internal/<pkg>/ -coverprofile=cov.out -covermode=atomic
+go tool cover -func=cov.out | awk '$NF == "0.0%"'
+
+# Total geral
+go test ./... -short -coverprofile=cov.out -covermode=atomic
+go tool cover -func=cov.out | awk '$NF == "0.0%"' | wc -l
+```
+
+### Regeneração deste Arquivo
+
+```bash
+go test ./... -short -coverprofile=coverage.out -covermode=atomic
+go tool cover -func=coverage.out | awk '$NF == "0.0%" {print $1, $2}' > /tmp/zero_funcs.txt
+# Rerodar split em FASES (script em este histórico)
+```
+
+---
+
+## Exceções Permanentes (NÃO testar)
+
+Per CLAUDE.md, NÃO precisam de teste:
+
+| Categoria | Localização | Funções |
+|---|---|---|
+| `main()` do CLI | `cmd/goanime/main.go:19` | 1 |
+| `main()` de exemplos SDK | `pkg/goanime/examples/*/main.go` | 4 |
+| Loops MPV/TUI interativos puros | `playback.HandleSeries`, `playback.HandleMovie`, `handlers.InteractiveMediaFlow`, `handlers.SelectMediaType` | ~10 |
+| Bubble Tea `View()`/`tickCmd()` integradas | `player/helper.go`, etc. | ~5 |
+| Funções com hardware (FFmpeg GPU/audio device) | `upscaler/anime4k.go:Close` | ~3 |
+| `pkg/goanime/types/*` (defs sem lógica) | tipos puros | 7 |
+
+**Total estimado de exceções:** ~30 funções → ficam a 0% mesmo após FASE 17.
+
+**Funções a cobrir efetivamente:** 165 − 30 = ~135 (≈ 81% das funções 0% restantes).
+
+---
+
+## Métricas Esperadas
+
+| Métrica | Pós-14 | Pós-15 | Pós-16 | Pós-17 |
+|---|---:|---:|---:|---:|
+| Funções 0% | 165 | ~108 | ~53 | **≤ 30** |
+| Cobertura % | 52.8 | ~58 | ~64 | **≥ 70** |
+| Testes novos | — | +57 | +55 | +53 |
+

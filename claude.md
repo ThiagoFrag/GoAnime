@@ -183,10 +183,37 @@ Criar em `internal/scraper/testdata/SCRAPER_NAME/`
 
 ---
 
-## VERIFICAÇÃO FINAL (após FASE 14)
+## VERIFICAÇÃO FINAL (após FASE 17)
 ```bash
 go test ./... -short -coverprofile=coverage.out -covermode=atomic -race
 go tool cover -func=coverage.out | tail -1
 go tool cover -func=coverage.out | grep "0\.0%" | wc -l
 ```
-Meta: **≥ 70.0%** · **0 funções a 0%** (exceto não-testáveis)
+Meta: **≥ 70.0%** · **≤ 50 funções a 0%** (apenas TUI/IPC/main não-testáveis)
+
+---
+
+## STATUS ATUAL (2026-05-18)
+
+- ✅ FASES 1–14: completadas → **52.8% cobertura total** · **165 funções ainda a 0%** (número exato, contado via `awk '$NF == "0.0%"'`)
+- ⬜ FASES 15–17: planejadas (push 70% com regra estrita) → ver `TEST_STAGES.md` e `TEST_PLAN_FUNCTIONS.md`
+
+| Fase | Pacotes | Funcs 0% alvo | Stmts | Status |
+|---|---|---:|---:|:---:|
+| 15 | api + util | 57 | +600 | ⬜ |
+| 16 | playback + handlers + discord + upscaler + updater | 55 | +900 | ⬜ |
+| 17 | scraper + providers + downloader + SDK + misc | 53 | +600 | ⬜ |
+| **TOTAL** | | **165** | **+2100** | |
+
+**Paradigma FASES 15–17 (autorizado pelo usuário 2026-05-18 — "eficácia brutal"):**
+- **REGRA #0 mantida estrita:** *cada* função a 0% recebe seu próprio `TestNomeDaFuncao_Cenario`. Sem agrupar, sem pular.
+- **Refactor amplamente permitido** para tornar testável (interface wrap, var injetável, split de função orquestrada, `*ForTesting`). Restrição única: **API pública não quebra (semver)**.
+- **Métricas duplas:**
+  1. Funções a 0%: 165 → ≤ 30 (apenas `main()` + exemplos + TUI loops puros)
+  2. Cobertura total: 52.8% → ≥ 70%
+
+**Pós-FASE 17 projetado:** ≥ 70% cobertura, ≤ 30 funções a 0%
+
+**Mapeamento funcional completo:** ver `TEST_PLAN_FUNCTIONS.md` (165 funções listadas por arquivo:linha:nome, agrupadas por fase).
+
+**Atenção ao bug do grep:** Para listar funções 0% use `awk '$NF == "0.0%"'`, NÃO `grep "0.0%"` (este último também matches `100.0%`, `80.0%`, `70.0%`, etc.).

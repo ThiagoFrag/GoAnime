@@ -476,6 +476,117 @@ func TestScraperManager_ConcurrentSearch(t *testing.T) {
 
 ---
 
+## 8.5 Push 70% — Estratégia Estrita "1 Teste por Função" (FASES 15–20, 2026-05-18)
+
+Pós-FASE 14: **52.8%** total · **591 funções a 0%**. Para alcançar **≥ 70%** com **eficácia brutal** e máxima precisão, mantemos a regra dura da CLAUDE.md.
+
+### Princípios (REGRA #0 reafirmada)
+
+1. **CADA função listada em `go tool cover -func | grep "0.0%"` recebe seu próprio `TestNomeDaFuncao_Cenario`.** Sem agrupamento. Sem "uma tabela cobre cinco funções". Cada `func X()` no código produção → `func TestX*()` em arquivo de teste.
+2. **Refactor amplamente permitido para tornar testável.** Usuário autoriza "vale tudo para software profissional". Restrição única: **API pública não quebra** (semver-friendly). Permitido:
+   - `var fooBaseURL = "..."` substituível em teste
+   - Interface wrap para globals (`type rpcClient interface { ... }`)
+   - Split de função orquestrada em wrapper público + helper privado testável
+   - `*ForTesting` setters (mas ≤ 2 por pacote para não poluir)
+   - Receber `httpClient`, `logger`, etc. como dependência opcional
+3. **Table-driven é técnica, não atalho.** Tabelas continuam OK *dentro de uma única função `TestX`* para cobrir múltiplos cenários da mesma função. Mas NÃO use uma `TestFoo` para cobrir as funções `A`, `B`, `C` — cada uma precisa de seu próprio `TestA`, `TestB`, `TestC`.
+4. **Fixtures em testdata/.** M3U8/VTT/SRT/zip/HTML ficam em `internal/<pkg>/testdata/`. Carregar via `loadFixture(t, path)`.
+5. **Cobertura é métrica secundária; nº de funções 0% é métrica primária.** O alvo final é "≤ 50 funções a 0%" — a cobertura ≥ 70% surge como consequência.
+
+### Padrões novos
+
+#### Pipe IPC (substitui rede real para MPV/sockets)
+```go
+func newTestMPVPipe(t *testing.T) (clientEnd, serverEnd net.Conn) {
+    t.Helper()
+    c, s := net.Pipe()
+    t.Cleanup(func() { _ = c.Close(); _ = s.Close() })
+    return c, s
+}
+```
+
+#### Injeção mínima por package var
+```go
+// In production code:
+var anilistBaseURL = "https://graphql.anilist.co"
+// In test:
+func TestX(t *testing.T) {
+    orig := anilistBaseURL
+    t.Cleanup(func() { anilistBaseURL = orig })
+    srv := httptest.NewServer(handler)
+    t.Cleanup(srv.Close)
+    anilistBaseURL = srv.URL
+    // ...
+}
+```
+
+#### Zip server in-memory para downloader/upscaler
+```go
+func zipServer(t *testing.T, files map[string]string) *httptest.Server {
+    t.Helper()
+    var buf bytes.Buffer
+    w := zip.NewWriter(&buf)
+    for name, content := range files {
+        f, _ := w.Create(name)
+        _, _ = f.Write([]byte(content))
+    }
+    _ = w.Close()
+    srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+        w.Header().Set("Content-Type", "application/zip")
+        _, _ = w.Write(buf.Bytes())
+    }))
+    t.Cleanup(srv.Close)
+    return srv
+}
+```
+
+#### Interface wrap para globais Discord
+```go
+type rpcClient interface {
+    Login() error
+    Logout() error
+    SetActivity(activity client.Activity) error
+}
+// Tests inject via:
+func SetClientForTesting(c rpcClient) { discordClient = c }
+```
+
+### Alvos por FASE (estrito 1 teste/função)
+
+| Fase | Pacotes | Funcs 0% | Stmts alvo |
+|---|---|---:|---:|
+| 15 | `player/` | 77 | +500 |
+| 16 | `api/`, `util/` | 147 | +600 |
+| 17 | `scraper/`, `api/providers/...`, `api/source/` | 132 | +400 |
+| 18 | `api/movie/`, `api/providers/`, `downloader/`, `downloader/hls/` | 67 | +250 |
+| 19 | `upscaler/`, `discord/`, `updater/` | 80 | +350 |
+| 20 | `handlers/`, `playback/`, `models/`, `pkg/goanime/`, `tui/`, `tracking/`, `version/`, `download/`, `appflow/` | 88 | +200 |
+| **TOTAL** | | **591** | **+2300** |
+
+### Anti-padrões a evitar
+
+- ❌ Mockar TUI (huh, fuzzyfinder, bubbletea). Em vez disso: refactor para extrair lógica testável antes do widget interativo.
+- ❌ Testar `Run*Player()`, `HandleSeries()`, `Start()` (loops com IPC real) **sem refactor**. Refator extrai helper testável → testar helper.
+- ❌ Aumentar cobertura via testes triviais (`assert.NotNil(NewX())`) — cada teste deve verificar **comportamento observável**.
+- ❌ Pular função sem teste — **PROIBIDO** pela CLAUDE.md. Se não consegue testar, faça refactor.
+- ❌ `*ForTesting` setters em excesso. Limite ≤ 2 por pacote; preferir variável injetável ou interface.
+
+### Tabela de Decisão: "Como testar essa função?"
+
+| Tipo da função | Estratégia | Refactor necessário? |
+|---|---|:---:|
+| Pure (sem I/O, sem estado) | Table-driven `TestX_*` com 5–12 casos | ❌ |
+| Globals/accessor | `t.Cleanup` para resetar + verificar getter | ❌ |
+| HTTP client method | `httptest.Server` + injeção de `baseURL` ou `*http.Client` | Talvez |
+| Função com global `*Client` | Interface wrap + `var fooFactory = func(...) iface { ... }` | ✅ pequeno |
+| Função orquestradora (rede + TUI + outros) | Split em wrapper + helper testável | ✅ pequeno |
+| MPV IPC | `net.Pipe()` + injeção de `mpvSendCommand func` | ❌ (já injetado) |
+| Download de zip/tarball remoto | `httptest.Server` + zip in-memory + `t.TempDir()` | ❌ ou pequeno |
+| `main()` / exemplos | Não testar (exceção CLAUDE.md) | n/a |
+| Loop interativo (`Run*Player`, `HandleSeries`) | Não testar a função; extrair helpers internos | ✅ |
+
+---
+
 ## 9. Regras de Ouro
 
 1. **Se não tem I/O → Unitário Puro.** Sem mock, sem server, sem fixture. Rápido.

@@ -217,6 +217,190 @@ Distribuição por arquivo:
 
 ---
 
+# Fases Adicionais — Push para 70% via "1 Teste por Função" Estrito (2026-05-18)
+
+Estado pós-FASE 14: **52.8%** (12065 statements / 5692 missed) · **165 funções ainda a 0%**.
+
+**Meta dupla:**
+1. **≥ 70.0% cobertura total** (≥ 8447 statements cobertos, +2073 vs. atual)
+2. **≤ 30 funções a 0%** (cobrir 135+ das 165 atuais — apenas TUI/IPC/main intratáveis ficam)
+
+**Regra absoluta reafirmada (CLAUDE.md):** *cada* função listada como 0% recebe seu próprio `TestNomeDaFuncao_Cenario`. Sem agrupar, sem pular. Eficácia brutal.
+
+**Refactor agora amplamente permitido** quando necessário para testar — usuário autoriza "vale tudo". Mantemos apenas a regra dura: API pública NÃO quebra (semver). Adicionar interface, var injetável, helper `*ForTesting`, split de função orquestrada — tudo OK.
+
+### Distribuição Real das 165 Funções 0% (extraído 2026-05-18)
+
+| Pacote | Funcs 0% | Cov atual | Fase alvo |
+|---|---:|---:|:---:|
+| `internal/util/` | 30 | 44.7% | 15 |
+| `internal/api/` | 27 | 42.8% | 15 |
+| `internal/playback/` | 14 | 13.8% | 16 |
+| `internal/scraper/` | 13 | 78.6% | 17 |
+| `internal/handlers/` | 12 | 5.7% | 16 |
+| `internal/upscaler/` | 11 | 49.2% | 16 |
+| `internal/discord/` | 10 | 29.5% | 16 |
+| `internal/updater/` | 8 | 53.4% | 16 |
+| `internal/api/providers/` | 8 | 48.7% | 17 |
+| `pkg/goanime/types/` | 7 | 0.0% | 17 |
+| `pkg/goanime/` | 5 | 5.0% | 17 |
+| `internal/downloader/` | 5 | 34.0% | 17 |
+| `internal/tui/` | 3 | 63.6% | 17 |
+| `internal/download/` | 2 | 0.0% | 17 |
+| `internal/appflow/` | 2 | 22.9% | 17 |
+| `pkg/goanime/examples/*` | 4 | 0.0% | (exceção `main()`) |
+| `internal/tracking/` | 1 | 68.5% | 17 |
+| `internal/player/` | 1 | 51.5% | 17 |
+| `internal/api/providers/metadata/` | 1 | 72.3% | 17 |
+| `cmd/goanime/` | 1 | — | (exceção `main()`) |
+| **TOTAL** | **165** | | |
+
+### Manifestos
+
+| Fase | Arquivo | Funções |
+|---|---|---:|
+| 15 | `.test_manifests/p15_api_util.txt` | 57 |
+| 16 | `.test_manifests/p16_tui_ipc.txt` | 55 |
+| 17 | `.test_manifests/p17_remaining.txt` | 53 |
+| **TOTAL** | | **165** |
+
+Para regenerar manifestos (após cada fase concluída):
+```bash
+go test ./... -short -coverprofile=coverage.out -covermode=atomic
+go tool cover -func=coverage.out | awk '$NF == "0.0%" {print $1, $2}' > /tmp/zero_funcs.txt
+# Atenção: usar awk '$NF == "0.0%"', NÃO grep "0.0%" — grep também matches "100.0%", "80.0%", etc.
+```
+
+---
+
+## FASE 15 ⬜ — API + Util: 57 funções (Branches + Error Paths)
+
+**Pacotes:**
+- `internal/api/` (1236 stmts, 42.8% → 60%, 27 funcs 0%)
+- `internal/util/` (978 stmts, 44.7% → 65%, 30 funcs 0%)
+
+Lista completa em `.test_manifests/p15_api_util.txt` e `TEST_PLAN_FUNCTIONS.md` (FASE 15).
+
+### Funções-chave por arquivo
+
+#### `internal/api/` (27 funcs)
+- `allanime_enhanced.go`: `GetEpisodeStreamURLEnhanced`, `GetAllAnimeEpisodeURLDirect`
+- `allanime_smart.go`: `DownloadAllAnimeSmartRange`, `smartDownload`, `smartDownloadDirect`, `resolveStreamURLForEpisode`
+- `anime.go`: `GetEpisodeData`, `GetMovieData`, `FetchAnimeDetails`, `enrichAnimeData`, `httpPostFast`, `safeClose` (mover via injection)
+- `anime_url_title.go`: `FetchAnimeFromAniListWithURL`
+- `aniskip.go`: `GetAniSkipData`, `GetAndParseAniSkipData`
+- `enhanced.go`: `SearchAnimeEnhanced`, `GetAnimeEpisodesEnhanced`, `GetEpisodeStreamURL`, `DownloadEpisodeEnhanced`, `DownloadEpisodeRangeEnhanced`, `downloadFromURL`, `GetSuperFlixEpisodes`, `GetSuperFlixStreamURL`
+- `episode_providers.go`: `FetchEpisodeData` per provider, `getAniListIDFromMAL`, `getKitsuAnimeID`
+
+#### `internal/util/` (30 funcs)
+Maioria são helpers de path, URL, fila de progresso, locale, formatters. Ver lista exata em `TEST_PLAN_FUNCTIONS.md`.
+
+### Refactors permitidos
+1. `var anilistBaseURL`, `var kitsuBaseURL`, `var jikanBaseURL`, `var aniskipBaseURL` substituíveis
+2. `SearchAnimeEnhanced` → extrair `searchAllSources(name) (results, error)` (sem TUI/fuzzyfinder)
+3. `DownloadAllAnimeSmartRange` → extrair `validateAndPlanRange` testável
+
+**Verificação:**
+```bash
+go test ./internal/api/... ./internal/util/ -count=1 -race -coverprofile=p15.out
+go tool cover -func=p15.out | awk '$NF == "0.0%"' | grep -E "internal/(api|util)" | wc -l  # Esperado: ≤ 10
+go tool cover -func=p15.out | tail -1  # Esperado: ≥ 62%
+```
+
+---
+
+## FASE 16 ⬜ — Playback + Handlers + Discord + Upscaler + Updater: 55 funções (TUI/IPC com refactor)
+
+**Pacotes:**
+- `internal/playback/` (14 funcs) — TUI navigation
+- `internal/handlers/` (12 funcs) — TUI menus
+- `internal/upscaler/` (11 funcs) — shaders install + video probe
+- `internal/discord/` (10 funcs) — RPC presence
+- `internal/updater/` (8 funcs) — release download/apply
+
+Lista completa em `.test_manifests/p16_tui_ipc.txt` e `TEST_PLAN_FUNCTIONS.md` (FASE 16).
+
+### Refactors permitidos (autorizados — "vale tudo")
+
+#### `playback/`
+- `HandleSeries`, `HandleMovie` → extrair `prepareSeriesContext(anime) (*seriesCtx, error)` e `prepareMovieContext(anime) (*movieCtx, error)` puros + testáveis. Loop interativo permanece intratável → testado via helpers extraídos.
+- `handleUserNavigation*` → extrair `decideNavigation(input, state) NavCmd` puro.
+- `SelectInitialEpisode` → extrair `pickInitialEpisode(episodes, savedEp) int` puro.
+
+#### `handlers/`
+- `SearchMedia`, `SelectMediaType`, `InteractiveMediaFlow`, `handleAnimePlayback` → extrair `dispatchByMediaType(mt MediaType) HandlerFunc`.
+- `HandleDownloadRequest`, `HandleMovieDownloadRequest`, `HandleUpdateRequest`, `HandleUpscaleRequest`, `HandlePlaybackMode` → injetar dependências via `Options{...}` struct.
+- `handleImageUpscale`/`handleVideoUpscale` → extrair `validateUpscaleInput(path, opts) error`.
+
+#### `discord/`
+- `type rpcClient interface { Login() error; Logout() error; SetActivity(client.Activity) error }`
+- `var discordClientFactory = func(id string) rpcClient { return client.NewClient(id) }` substituível
+- `LoginClient`, `LogoutClient`, `Start`, `Stop`, `updateDiscordPresence`, `getPrecisePlaybackState`, `buildPreciseTimestamps`, `FetchDuration` ficam testáveis com mock
+
+#### `upscaler/`
+- `var shadersZipURL = "..."` substituível (também `ganShadersZipURL`)
+- `InstallShaders`, `InstallGANShaders`, `extractZip` → testar com httptest serve in-memory zip + `t.TempDir()`
+- `UpscaleVideo`, `probeVideo`, `extractFrames`, `upscaleFrames`, `encodeVideo` → mockar `exec.Command` via interface
+
+#### `updater/`
+- `var releaseAPIURL`, `var releaseDownloadURL` substituíveis
+- `CheckForUpdates`, `PromptForUpdate`, `PerformUpdate`, `downloadUpdate`, `extractArchive`, `applyUpdate` → httptest serve tarball + `t.TempDir()` para o destino
+
+**Verificação:**
+```bash
+go test ./internal/playback/ ./internal/handlers/ ./internal/discord/ ./internal/upscaler/ ./internal/updater/ -count=1 -race -coverprofile=p16.out
+go tool cover -func=p16.out | awk '$NF == "0.0%"' | wc -l  # Esperado: ≤ 15
+```
+
+---
+
+## FASE 17 ⬜ — Scraper + Providers + Downloader + SDK + Misc: 53 funções
+
+**Pacotes (organizado por gap):**
+- `internal/scraper/` (13 funcs)
+- `internal/api/providers/` (8 funcs)
+- `pkg/goanime/` + `pkg/goanime/types/` (12 funcs)
+- `internal/downloader/` (5 funcs)
+- `internal/tui/` (3 funcs)
+- `internal/download/` (2 funcs)
+- `internal/appflow/` (2 funcs)
+- `internal/tracking/`, `internal/player/`, `internal/api/providers/metadata/` (1 func cada)
+
+Lista completa em `.test_manifests/p17_remaining.txt` e `TEST_PLAN_FUNCTIONS.md` (FASE 17).
+
+### Exceções aceitas nesta fase (não testar)
+- `cmd/goanime/main.go:main` (CLI entry)
+- `pkg/goanime/examples/*/main.go:main` (4 funcs — exemplos)
+
+### Refactors permitidos
+- `pkg/goanime/Client`: receber `httpClient *http.Client` injetável
+- Downloader: `httpClient` injetável + worker pool size opt-in
+- Restante: refactor mínimo se necessário (vars de URL, interface wrap)
+
+**Verificação:**
+```bash
+go test ./... -count=1 -race -short -coverprofile=p17.out
+go tool cover -func=p17.out | awk '$NF == "0.0%"' | wc -l  # Esperado: ≤ 30 (apenas exceções `main()`)
+go tool cover -func=p17.out | tail -1  # Esperado: ≥ 70%
+```
+
+---
+
+## Resumo Push 70% (FASES 15–17)
+
+| Fase | Pacotes | Funcs 0% alvo | Stmts esperados | Refactors |
+|---|---|---:|---:|:---:|
+| 15 | api + util | 57 | +600 | 3 mín (vars + 2 splits) |
+| 16 | playback + handlers + discord + upscaler + updater | 55 | +900 | 5–6 (interface + vars + splits) |
+| 17 | scraper + providers + downloader + SDK + misc | 53 | +600 | 2–3 (injetar httpClient) |
+| **TOTAL** | | **165** | **+2100** | **10–12 refactors** |
+
+**Cobertura projetada após FASE 17:** 52.8% + (2100/12065 × 100) ≈ **70.2%**
+
+**Funções 0% projetadas:** 165 → ≤ 30 (apenas: `main()` do CLI + 4 exemplos do SDK + Bubble Tea integrated loops + funções com hardware GPU)
+
+---
+
 ## Checklist
 
 | Fase | Escopo | Funções | Status |
@@ -235,4 +419,9 @@ Distribuição por arquivo:
 | 12 | Downloader Completo | ~84 | ✅ |
 | 13 | API Movie + Enhanced + Providers | ~100 | ✅ (2026-05-18) |
 | 14 | Handlers + Playback + Discord + Upscaler + Resto | ~120 | ✅ (2026-05-18) |
-| **TOTAL** | | **~983** | |
+| 15 | API + Util (57 funcs 0%) | +57 funcs / +600 stmts | ⬜ (push 70%) |
+| 16 | Playback + Handlers + Discord + Upscaler + Updater (55 funcs) | +55 funcs / +900 stmts | ⬜ (push 70%) |
+| 17 | Scraper + Providers + Downloader + SDK + Misc (53 funcs) | +53 funcs / +600 stmts | ⬜ (push 70%) |
+| **TOTAL** | | **~1148 funcs / ~+2100 stmts** | |
+
+**Pós-FASE 17 projetado:** ≥ 70% cobertura, ≤ 30 funções a 0% (apenas `main()` do CLI + exemplos SDK + TUI loops puros + GPU hardware paths)
