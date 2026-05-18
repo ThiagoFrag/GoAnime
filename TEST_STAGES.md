@@ -182,7 +182,7 @@ Distribuição por arquivo:
 
 ---
 
-## FASE 13 ⬜ — API Movie + Enhanced HTTP + Providers (~100 funções)
+## FASE 13 ✅ — API Movie + Enhanced HTTP + Providers (~100 funções)
 **Arquivos:** `api/movie/`(27), `api/enhanced.go` HTTP(~16), `api/episode_providers.go`(7), `api/allanime_enhanced.go`(4), `api/providers/`(46+5+7+9)
 
 | Sub-pacote | Funções |
@@ -233,6 +233,6 @@ Distribuição por arquivo:
 | 10 | SuperFlix + MediaManager | ~69 | ✅ (AnimeDrive removido 2026-05-17) |
 | 11 | Player Completo | ~128 | ✅ |
 | 12 | Downloader Completo | ~84 | ✅ |
-| 13 | API Movie + Enhanced + Providers | ~100 | ⬜ |
+| 13 | API Movie + Enhanced + Providers | ~100 | ✅ (2026-05-18) |
 | 14 | Handlers + Playback + Discord + Upscaler + Resto | ~120 | ⬜ |
 | **TOTAL** | | **~983** | |
