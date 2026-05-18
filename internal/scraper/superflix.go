@@ -28,11 +28,12 @@ import (
 var ErrSuperFlixNoServers = errors.New("superflix: no servers available for this content")
 
 const (
-	// SuperFlixBase is the canonical SuperFlix host. The legacy
-	// `superflixapi.rest` host now 301-redirects here; Go's http.Client follows
-	// the redirect but downgrades the POST to a GET (dropping the body), which
-	// makes /player/bootstrap return HTML 404 and break JSON decoding.
-	SuperFlixBase      = "https://superflixapi.online"
+	// SuperFlixBase is the canonical SuperFlix host. Previous hosts
+	// (`superflixapi.rest`, `superflixapi.online`) now 301-redirect here;
+	// Go's http.Client follows the redirect but downgrades the POST to a GET
+	// (dropping the body), which makes /player/bootstrap return HTML 404 and
+	// break JSON decoding.
+	SuperFlixBase      = "https://superflixapi.best"
 	SuperFlixUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 

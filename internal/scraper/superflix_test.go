@@ -1966,8 +1966,9 @@ func TestRegexPatterns(t *testing.T) {
 // =============================================================================
 // Regression tests (added 2026-04-30)
 //
-// Context: SuperFlix moved from `superflixapi.rest` to `superflixapi.online`
-// using a server-side 301 redirect. Go's http.Client follows the redirect but
+// Context: SuperFlix migrates hosts via server-side 301 redirects
+// (`superflixapi.rest` → `.online` → `.best`).
+// Go's http.Client follows the redirect but
 // downgrades the POST to a GET (dropping the body), so /player/bootstrap
 // returned an HTML 404 page. The JSON decoder then surfaced the cryptic
 // `invalid character '<' looking for beginning of value`, breaking playback.
@@ -1976,11 +1977,13 @@ func TestRegexPatterns(t *testing.T) {
 // than the cryptic JSON decode error.
 // =============================================================================
 
-func TestSuperFlixBase_PointsToOnlineHost_2026_04_30(t *testing.T) {
+func TestSuperFlixBase_PointsToBestHost_2026_05_18(t *testing.T) {
 	t.Parallel()
 	// Pinning the canonical host. If this needs to change in the future,
 	// also update internal/api/providers/metadata/metadata.go.
-	assert.Equal(t, "https://superflixapi.online", SuperFlixBase)
+	// 2026-05-18: .online started 301-redirecting to .best, breaking POSTs
+	// to /player/bootstrap (Go downgrades POST→GET on redirect).
+	assert.Equal(t, "https://superflixapi.best", SuperFlixBase)
 }
 
 func TestBootstrap_HTMLResponseSurfacesActionableError_2026_04_30(t *testing.T) {
