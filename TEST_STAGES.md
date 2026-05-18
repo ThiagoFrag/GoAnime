@@ -199,7 +199,7 @@ Distribuição por arquivo:
 
 ---
 
-## FASE 14 ⬜ — Handlers + Playback + Resto (~120 funções)
+## FASE 14 ✅ — Handlers + Playback + Resto (~120 funções)
 **Arquivos:** `handlers/`(28), `playback/`(23), `download/workflow.go`(10), `discord/`(34), `tracking/`(7), `updater/`(12), `tui/`(7), `upscaler/`(47), `appflow/`(2), `pkg/goanime/client.go`(7), `scraper/movie/`(42)
 
 | Sub-pacote | Funções | Nota |
@@ -234,5 +234,5 @@ Distribuição por arquivo:
 | 11 | Player Completo | ~128 | ✅ |
 | 12 | Downloader Completo | ~84 | ✅ |
 | 13 | API Movie + Enhanced + Providers | ~100 | ✅ (2026-05-18) |
-| 14 | Handlers + Playback + Discord + Upscaler + Resto | ~120 | ⬜ |
+| 14 | Handlers + Playback + Discord + Upscaler + Resto | ~120 | ✅ (2026-05-18) |
 | **TOTAL** | | **~983** | |

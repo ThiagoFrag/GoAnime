@@ -40,3 +40,35 @@ func TestFindEpisodeByNumber_NotFound(t *testing.T) {
 	assert.Error(t, err, "expected error for non-existent episode number")
 	t.Logf("Got expected error: %v", err)
 }
+
+// TestFindEpisodeByNumber_Found_FirstMatch verifies the happy-path direct hit
+// (no fuzzy-finder fallback). Returns the exact URL/Number/Num triple.
+func TestFindEpisodeByNumber_Found_FirstMatch(t *testing.T) {
+	t.Parallel()
+	episodes := []models.Episode{
+		{URL: "https://example.com/ep1", Number: "1"},
+		{URL: "https://example.com/ep2", Number: "2"},
+		{URL: "https://example.com/ep3", Number: "3"},
+	}
+
+	url, numStr, num, err := FindEpisodeByNumber(episodes, 2)
+	assert.NoError(t, err)
+	assert.Equal(t, "https://example.com/ep2", url)
+	assert.Equal(t, "2", numStr)
+	assert.Equal(t, 2, num)
+}
+
+// TestFindEpisodeByNumber_Found_PrefixedNumber verifies that prefixed episode
+// numbers ("Episode 5", "Ep5", etc.) are matched via player.ExtractEpisodeNumber.
+func TestFindEpisodeByNumber_Found_PrefixedNumber(t *testing.T) {
+	t.Parallel()
+	episodes := []models.Episode{
+		{URL: "u1", Number: "Episode 1"},
+		{URL: "u5", Number: "Episode 5"},
+	}
+
+	url, _, num, err := FindEpisodeByNumber(episodes, 5)
+	assert.NoError(t, err)
+	assert.Equal(t, "u5", url)
+	assert.Equal(t, 5, num)
+}
