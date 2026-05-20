@@ -6,6 +6,7 @@ import (
 
 	"github.com/alvarorichard/Goanime/internal/models"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/term"
 )
 
 // TestGetAnimeEpisodes_EmptyResult verifies that GetAnimeEpisodes returns an
@@ -41,8 +42,8 @@ func TestSearchAnime_InvalidName(t *testing.T) {
 	// SearchAnime may open an interactive fuzzy finder (tcell-based TUI) if
 	// results are returned. On CI there is no TTY, so tcell panics (Windows)
 	// or hangs waiting for terminal input.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 
 	anime, err := SearchAnime("zzzzz_nonexistent_anime_99999")
@@ -61,8 +62,8 @@ func TestSearchAnimeEnhanced_InvalidName(t *testing.T) {
 	// SearchAnimeEnhanced may open an interactive fuzzy finder (tcell-based TUI)
 	// if results are returned. On CI there is no TTY, so tcell panics (Windows)
 	// or hangs waiting for terminal input.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 
 	anime, err := SearchAnimeEnhanced("zzzzz_nonexistent_anime_99999")

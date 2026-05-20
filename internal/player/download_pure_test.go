@@ -13,6 +13,7 @@ import (
 	"github.com/alvarorichard/Goanime/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/term"
 )
 
 func TestIsAnimeFireVideoAPIURL(t *testing.T) {
@@ -79,14 +80,14 @@ func TestSafePartPath(t *testing.T) {
 
 	t.Run("valid", func(t *testing.T) {
 		t.Parallel()
-		got, err := safePartPath("/tmp/video.mp4", 1)
+		got, err := safePartPath(filepath.FromSlash("/tmp/video.mp4"), 1)
 		require.NoError(t, err)
-		assert.Equal(t, "/tmp/video.mp4.part1", got)
+		assert.Equal(t, filepath.FromSlash("/tmp/video.mp4.part1"), got)
 	})
 
 	t.Run("subdir ok", func(t *testing.T) {
 		t.Parallel()
-		got, err := safePartPath("/tmp/sub/video.mp4", 7)
+		got, err := safePartPath(filepath.FromSlash("/tmp/sub/video.mp4"), 7)
 		require.NoError(t, err)
 		assert.Contains(t, got, "video.mp4.part7")
 	})
@@ -94,9 +95,9 @@ func TestSafePartPath(t *testing.T) {
 	t.Run("part embedded in dir name still resolves correctly", func(t *testing.T) {
 		t.Parallel()
 		// Use a path whose basename uniquely identifies the part file.
-		got, err := safePartPath("/tmp/dir.with.dots/video.mp4", 0)
+		got, err := safePartPath(filepath.FromSlash("/tmp/dir.with.dots/video.mp4"), 0)
 		require.NoError(t, err)
-		assert.Equal(t, "/tmp/dir.with.dots/video.mp4.part0", got)
+		assert.Equal(t, filepath.FromSlash("/tmp/dir.with.dots/video.mp4.part0"), got)
 	})
 }
 
@@ -586,8 +587,8 @@ func TestHandleBatchDownloadRange_AllEpisodesAlreadyDownloaded(t *testing.T) {
 	// handleExistingEpisodes opens an interactive fuzzy finder. Outside a TTY
 	// it errors on Linux but blocks indefinitely on Windows (tcell winTty
 	// getConsoleInput syscall), which deadlocks CI. Skip when no TTY.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 	util.InitLogger()
 	SetAnimeName("HandleBatchRangeAllExistingTest", 1)
@@ -629,8 +630,8 @@ func TestHandleExistingEpisodes_WithDownloadedFilesEntersFuzzyFinder(t *testing.
 	// handleExistingEpisodes opens an interactive fuzzy finder. Outside a TTY
 	// it errors on Linux but blocks indefinitely on Windows (tcell winTty
 	// getConsoleInput syscall), which deadlocks CI. Skip when no TTY.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 	SetAnimeName("HandleExistingDownloadedTest", 1)
 	t.Cleanup(func() { SetAnimeName("", 0) })
@@ -655,8 +656,8 @@ func TestAskAndPlayDownloadedEpisode_WithDownloadedFilesEntersFuzzyFinder(t *tes
 	// askAndPlayDownloadedEpisode opens an interactive fuzzy finder. Outside a
 	// TTY it errors on Linux but blocks indefinitely on Windows (tcell winTty
 	// getConsoleInput syscall), which deadlocks CI. Skip when no TTY.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 	SetAnimeName("AskAndPlayDownloadedExistingTest", 1)
 	t.Cleanup(func() { SetAnimeName("", 0) })

@@ -10,6 +10,7 @@ import (
 	"github.com/alvarorichard/Goanime/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/term"
 )
 
 func TestSanitizeMediaTarget(t *testing.T) {
@@ -193,8 +194,8 @@ func TestHandleUpscaleFromMenu_DoesNotPanic(t *testing.T) {
 	// handleUpscaleFromMenu opens an interactive fuzzy finder. Outside a TTY
 	// it errors on Linux but blocks indefinitely on Windows (tcell winTty
 	// getConsoleInput syscall), which deadlocks CI. Skip when no TTY.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 	assert.NotPanics(t, func() { _ = handleUpscaleFromMenu() })
 }
@@ -203,8 +204,8 @@ func TestAskForDownload_ReturnsValidMarker(t *testing.T) {
 	// askForDownload opens an interactive fuzzy finder. Outside a TTY it
 	// errors on Linux but blocks indefinitely on Windows (tcell winTty
 	// getConsoleInput syscall), which deadlocks CI. Skip when no TTY.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 	got := askForDownload()
 	assert.GreaterOrEqual(t, got, 1)
@@ -214,8 +215,8 @@ func TestAskForPlayOffline_DoesNotPanic(t *testing.T) {
 	// askForPlayOffline opens an interactive fuzzy finder. Outside a TTY it
 	// errors on Linux but blocks indefinitely on Windows (tcell winTty
 	// getConsoleInput syscall), which deadlocks CI. Skip when no TTY.
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)")
+	if os.Getenv("CI") != "" || !term.IsTerminal(int(os.Stdin.Fd())) {
+		t.Skip("Skipping interactive fuzzy-finder test: requires a real TTY")
 	}
 	assert.NotPanics(t, func() { _ = askForPlayOffline() })
 }

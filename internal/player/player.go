@@ -32,6 +32,7 @@ import (
 	"github.com/alvarorichard/Goanime/internal/util"
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/pkg/errors"
+	"golang.org/x/term"
 )
 
 // Cached mpv path — avoids repeated filesystem searches on every episode play
@@ -1248,6 +1249,9 @@ func downloadAndPlayEpisode(
 
 // askForDownload presents a prompt for the user to choose a download option.
 func askForDownload() int {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return 4 // no TTY: default to play online
+	}
 	// Build the upscale option label with current status
 	upscaleStatus := upscaler.GetShaderModeName(upscaler.CurrentShaderMode)
 	upscaleLabel := fmt.Sprintf("Real-time Upscale [%s]", upscaleStatus)
@@ -1291,6 +1295,9 @@ func askForDownload() int {
 }
 
 func askForPlayOffline() bool {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return false // no TTY: default to no
+	}
 	items := []string{"Yes", "No"}
 	idx, err := tui.Find(items, func(i int) string {
 		return items[i]
@@ -1467,6 +1474,9 @@ func GetCurrentSubtitleTrack(socketPath string) (int, error) {
 
 // handleUpscaleFromMenu shows the real-time upscaling options menu
 func handleUpscaleFromMenu() error {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return fmt.Errorf("no TTY available for interactive menu")
+	}
 	// Check if shaders are installed
 	shadersInstalled := upscaler.ShadersInstalled()
 	currentMode := upscaler.GetShaderModeName(upscaler.CurrentShaderMode)
