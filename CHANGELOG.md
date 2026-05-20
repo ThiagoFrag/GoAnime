@@ -1,52 +1,40 @@
-# GoAnime Release Notes - Version 1.8.4
+# GoAnime Release Notes - Version 1.8.5
 
-Release date: 2026-05-03
+Release date: 2026-05-20
 
 ## Highlights
 
-- **SuperFlix API Migration**: Migrated SuperFlix endpoint from `superflixapi.rest` (deprecated) to `superflixapi.online` (canonical). The legacy host performs a 301 redirect, but Go's HTTP Client downgrades POST to GET, breaking requests. Updated across all code and tests.
-- **SuperFlix Content Filtering**: Implemented episode filtering by air date, removing episodes with missing, "null", or future air dates. This resolves issues where placeholder episodes appeared without available sources.
-- **SuperFlix Error Handling Improvements**: Implemented `ensureJSONResponse()` to detect HTML or non-2xx responses and produce clear error messages instead of cryptic "invalid character '<'". Now performs body-sniffing instead of relying solely on Content-Type header.
-- **Temporarily Disabled Sources**: FlixHQ, SFlix, and 9Anime commented out until fixes are implemented. AnimeDrive also temporarily disabled.
-- **Conditional Logic Refactoring**: Replacement of complex if-else chains with switch statements for improved readability and maintainability across the codebase.
-- **Version Bumped**: Updated to 1.8.4 with automatic normalization of the "v" prefix in CI workflows.
+- **Go 1.26.3 Toolchain**: Project upgraded to Go 1.26.3. Updated all dependencies to latest compatible versions, including `enetx/surf` and `quic-go`.
+- **SuperFlix Host Migration**: SuperFlix references updated from `superflixapi.online` to `superflixapi.best`. The previous `.online` host began returning 5xx errors; `.best` is now the canonical endpoint.
+- **SFlix Source Removed**: SFlix integration deleted entirely (previously disabled). Dead provider code and associated tests purged.
+- **Media Manager & Scraper Restructure**: Internal media manager and scraper layout refactored for cleaner provider separation. Public API preserved (no breaking changes).
+- **Major Test Coverage Push**: Phases 1–14 implemented; coverage raised to **52.8%**. Phases 15–17 still in progress, targeting the remaining 165 functions at 0% across `api`, `util`, `playback`, `handlers`, `discord`, `upscaler`, `updater`, `scraper`, `providers`, `downloader`, and `SDK`.
+- **Windows CI Stability**: Interactive fuzzy-finder tests now skip in CI environments without TTY. Resolves persistent 10-minute deadlocks on `windows-latest` runners caused by `tcell` `winTty.getConsoleInput` syscall blocking.
 
 ## Features
 
-- Migrate SuperFlix API endpoint to canonical `superflixapi.online` host.
-- Add content filtering for SuperFlix episodes: remove episodes with empty, "null", or future air dates.
-- Implement `ensureJSONResponse()` helper for clear detection of HTTP/HTML errors in SuperFlix APIs.
-- Refactor conditional chains across multiple files: replace nested if-else with switch statements for improved readability.
-- Add support for non-UTC timezones in SuperFlix episode filtering (normalizes to UTC internally).
-- Version normalization: automatic TrimPrefix("v") in CI builds to avoid "vv1.8.4" in outputs.
+- Upgrade Go toolchain to 1.26.3; bump module dependencies project-wide.
+- Update `enetx/surf` and `quic-go` to latest releases.
+- Add comprehensive unit tests for scraper provider lookup, episode resolution, and upscaler pipeline (`internal/scraper`, `internal/upscaler`).
+- Add player functionality tests: streaming flow, progress aggregation across episodes, error-path coverage (`internal/player`).
+- Add unit tests for movie/provider entry points and media-type routing (`internal/scraper/providers`).
+- Add Discord manager and handler tests: presence updates, rich-presence formatting, lifecycle (`internal/discord`).
+- Implement Phases 11–14 of the test plan: every targeted exported and unexported function in those phases now has a dedicated test.
+- Phases 15–17 in progress: tests being added for `api` + `util`, then `playback` + `handlers` + `discord` + `upscaler` + `updater`, then `scraper` + `providers` + `downloader` + `SDK`.
 
 ## Bug Fixes
 
-- **Critical**: Fix SuperFlix API host migration: update from `superflixapi.rest` to `superflixapi.online`. The 301 redirect from the legacy host downgrades POST to GET, breaking `/player/bootstrap`. Legacy code received HTML 404 and failed with "invalid character '<' looking for beginning of value".
-- **Critical**: Fix SuperFlix episode filtering: placeholder episodes with `air_date: null` or `air_date: ""` are now removed before returning to the user. Episodes with future air dates are also filtered. This resolves issues where users saw "no servers available" for episodes that haven't yet been released.
-- Fix SuperFlix error messages: implement `ensureJSONResponse()` to detect HTML or non-2xx status codes and produce clear messages instead of "invalid character '<'". Logs now indicate the endpoint, status code, and final URL for diagnosis.
-- Fix SuperFlix air_date timezone handling: filtering now uses UTC internally, preventing leakage of tomorrow's episodes in timezones west of UTC.
-- Temporarily disable FlixHQ, SFlix, and 9Anime source providers until fixes are ready. Sources commented out with `/* */` blocks in provider registry.
-- Temporarily disable AnimeDrive scraper until Cloudflare bypass is implemented.
-- Fix version normalization: strip leading "v" from injected CI version string to avoid "vv1.8.4" in outputs.
-- Refactor logging: replace `log.Fatalln()` with `util.Errorf()` in error handlers of main.go, improving graceful shutdown.
-- Remove Nix configuration files (default.nix, flake.nix, flake.lock, gomod2nix.toml) from repository.
+- **Critical**: Update SuperFlix host references from `superflixapi.online` to `superflixapi.best`. The `.online` host began failing; `.best` is the new canonical endpoint. Applied across scraper code, tests, and fixtures.
+- Fix Windows CI deadlock in `TestHandleUpscaleFromMenu_DoesNotPanic`, `TestAskForDownload_ReturnsValidMarker`, `TestAskForPlayOffline_DoesNotPanic`, and sibling interactive tests: each guard with `if os.Getenv("CI") != "" { t.Skip("Skipping interactive fuzzy-finder test in CI (no TTY available)") }`. Root cause: `tcell` `winTty.getConsoleInput` syscall blocks indefinitely without a console, hitting the 10-minute package timeout.
+- Fix `TestSanitizeMediaTarget/plain_path_cleaned` on Windows: wrap expected path in `filepath.FromSlash(...)` so OS-native separators match `filepath.Clean` output.
+- Fix global progress tracker cleanup order in CI to prevent intermittent races between teardown and lingering goroutines.
 
 ## Improvements
 
-- Refactor conditional logic: replace if-else chains with switch statements across multiple modules (`allanime_enhanced.go`, `player.go`, `playvideo.go`, `scraper.go`, `download.go`, `appflow/anime_data.go`, `util/util.go`, `util/perf.go`, `scraper/flixhq.go`, `scraper/sflix.go`, `scraper/superflix.go`) for improved readability and maintainability.
-- Add helper function `filterEpisodesByAirDate()` in SuperFlix scraper to centralize episode date filtering logic.
-- Improve SuperFlix error diagnostics: enrich error messages with player URL, content ID, and HTTP status for easier triage.
-- Add `ErrSuperFlixNoServers` typed error to distinguish content-unavailability (placeholder episodes) from system errors.
-- Rename `isFlixHQSourcePlayer()` to `isMovieOrTVSourcePlayer()` in player.go to reflect that both SuperFlix and FlixHQ share the same stream extraction route.
-- Add comprehensive regression test suites:
-  - `runspinner_regression_test.go`: tests for spinner race condition where action completed after runner returned.
-  - `source_routing_regression_test.go`: tests to validate correct routing of SuperFlix and FlixHQ through enhanced API.
-  - `allanime_ctr_regression_test.go`: improvements in slice allocation to avoid inefficient append operations.
-  - `superflix_test.go`: tests for air_date filtering, JSON response validation, HTML error detection, and timezone handling.
-  - `version_regression_test.go`: tests for version string normalization without "v" prefix.
-- Update go.mod/go.sum: dependency bump (klauspost/compress v1.18.5 → v1.18.6).
-- Minor code style improvements: replace `baseURL = baseURL + "/"` with `baseURL += "/"` and `timePerFrame = timePerFrame / 2` with `timePerFrame /= 2`.
+- Remove SFlix scraper, provider registration, and all associated tests. Dead code purged.
+- Refactor media manager and scraper directory layout: cleaner separation of provider concerns; internal types reorganized without changing the public surface.
+- Tighten interactive-test contract: tests that invoke `tui.Find` now check `os.Getenv("CI")` and skip when no TTY is attached, instead of relying on host-OS error behavior.
+- Update `go.mod`/`go.sum` for upgraded toolchain and dependency bumps (`enetx/surf`, `quic-go`, transitive updates).
+- Phases 1–14 implemented; Phases 15–17 underway, targeting the remaining 165 functions at 0%.
 
 ---
-
