@@ -138,5 +138,6 @@ func (c *Client) GetAvailableSources() []types.Source {
 	return []types.Source{
 		types.SourceAllAnime,
 		types.SourceAnimeFire,
+		types.SourceGoyabu,
 	}
 }

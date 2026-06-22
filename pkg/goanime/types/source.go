@@ -14,6 +14,8 @@ const (
 	SourceAllAnime Source = iota
 	// SourceAnimeFire represents the AnimeFire source
 	SourceAnimeFire
+	// SourceGoyabu represents the Goyabu source (PT-BR anime)
+	SourceGoyabu
 )
 
 // String returns the string representation of the source
@@ -23,6 +25,8 @@ func (s Source) String() string {
 		return "AllAnime"
 	case SourceAnimeFire:
 		return "AnimeFire"
+	case SourceGoyabu:
+		return "Goyabu"
 	default:
 		return "Unknown"
 	}
@@ -35,6 +39,8 @@ func (s Source) ToScraperType() scraper.ScraperType {
 		return scraper.AllAnimeType
 	case SourceAnimeFire:
 		return scraper.AnimefireType
+	case SourceGoyabu:
+		return scraper.GoyabuType
 	default:
 		return scraper.AllAnimeType
 	}
@@ -47,6 +53,8 @@ func ParseSource(s string) (Source, error) {
 		return SourceAllAnime, nil
 	case "AnimeFire", "animefire", "fire":
 		return SourceAnimeFire, nil
+	case "Goyabu", "goyabu":
+		return SourceGoyabu, nil
 	default:
 		return SourceAllAnime, fmt.Errorf("unknown source: %s", s)
 	}

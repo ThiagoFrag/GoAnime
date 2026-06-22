@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/alvarorichard/Goanime/internal/models"
+	"github.com/alvarorichard/Goanime/internal/resolver"
 	"github.com/alvarorichard/Goanime/internal/util"
 )
 
@@ -627,7 +628,17 @@ func (a *AnimefireAdapter) GetStreamURL(episodeURL string, options ...any) (stri
 	url, err := a.client.GetEpisodeStreamURL(episodeURL)
 	metadata := make(map[string]string)
 	metadata["source"] = "animefire"
-	return url, metadata, err
+	if err != nil {
+		return url, metadata, err
+	}
+	direct, referer, rerr := resolver.Resolve(url, qualityOpt(options))
+	if rerr != nil {
+		return "", metadata, rerr
+	}
+	if referer != "" {
+		metadata["referer"] = referer
+	}
+	return direct, metadata, nil
 }
 
 func (a *AnimefireAdapter) GetType() ScraperType {
@@ -651,7 +662,31 @@ func (a *GoyabuAdapter) GetStreamURL(episodeURL string, options ...any) (string,
 	url, err := a.client.GetEpisodeStreamURL(episodeURL)
 	metadata := make(map[string]string)
 	metadata["source"] = "goyabu"
-	return url, metadata, err
+	if err != nil {
+		return url, metadata, err
+	}
+	direct, referer, rerr := resolver.Resolve(url, qualityOpt(options))
+	if rerr != nil {
+		return "", metadata, rerr
+	}
+	if referer != "" {
+		metadata["referer"] = referer
+	}
+	return direct, metadata, nil
+}
+
+// qualityOpt extracts a quality string ("best"/"720p"/...) from the variadic
+// options the public lib threads through; defaults to "best".
+func qualityOpt(options []any) string {
+	for _, o := range options {
+		if s, ok := o.(string); ok {
+			switch strings.ToLower(s) {
+			case "best", "worst", "1080p", "720p", "480p", "360p":
+				return s
+			}
+		}
+	}
+	return "best"
 }
 
 func (a *GoyabuAdapter) GetType() ScraperType {
