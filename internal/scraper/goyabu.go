@@ -82,10 +82,12 @@ func NewGoyabuClient() *GoyabuClient {
 
 // goyabuSearchResult represents a search result from the WP REST API.
 // The API returns a map keyed by post ID, with "img" for the image field.
+// audio: "ptBr" = PT-BR dub, "jap" = Japanese with PT-BR subtitles.
 type goyabuSearchResult struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
 	Image string `json:"img"`
+	Audio string `json:"audio"`
 }
 
 // SearchAnime searches for anime on goyabu.io
@@ -162,8 +164,18 @@ func (c *GoyabuClient) SearchAnime(query string) ([]*models.Anime, error) {
 			continue
 		}
 		if r.Title != "" && r.URL != "" {
+			name := r.Title
+			// audio:"ptBr" = PT-BR dub — append marker if title doesn't say so.
+			// tagResults() in unified.go reads it from name/URL, so keep consistent.
+			lowerName := strings.ToLower(name)
+			lowerURL := strings.ToLower(r.URL)
+			if r.Audio == "ptBr" &&
+				!strings.Contains(lowerName, "dublado") &&
+				!strings.Contains(lowerURL, "dublado") {
+				name += " (Dublado)"
+			}
 			animes = append(animes, &models.Anime{
-				Name:     r.Title,
+				Name:     name,
 				URL:      c.resolveURL(c.baseURL, r.URL),
 				ImageURL: r.Image,
 			})
@@ -448,8 +460,11 @@ func (c *GoyabuClient) parseEpisodesFromJS(html string) []models.Episode {
 				}
 			}
 
-			// Goyabu episode IDs are WordPress post IDs; use /?p=ID
-			epURL := fmt.Sprintf("%s/?p=%s", c.baseURL, ep.ID.String())
+			// Use the link field directly (e.g. "/40205"). /?p=ID returns empty.
+			epURL := c.resolveURL(c.baseURL, ep.Link)
+			if ep.Link == "" {
+				epURL = fmt.Sprintf("%s/?p=%s", c.baseURL, ep.ID.String())
+			}
 
 			episodes = append(episodes, models.Episode{
 				Number: fmt.Sprintf("Episódio %d", num),
